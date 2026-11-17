@@ -334,7 +334,7 @@
 
     <div class="set-row">
       <span data-i18n="langLabel">语言</span>
-      <select id="selLang" aria-label="Language">
+      <select id="selLang" data-i18n-aria="langLabel" aria-label="语言">
         <option value="en" selected>English</option>
         <option value="zh">中文</option>
       </select>
@@ -413,6 +413,7 @@ const CONFIG = {
   unlockKoiFocus: 72000,     // 累计真实专注 20h → 解锁锦鲤
   longBreakEvery: 4,         // 每 4 个番茄进入长休息
   saveKey: 'eco-pond-v2',
+  prefsKey: 'eco-pond-v2.prefs', // 设备偏好（语言/静音/通知）独立存储，不进池塘存档
   backupKey: 'eco-pond-v2.backup',
   saveVersion: 2,
   careCooldown: 90,          // "照料池塘"冷却（真实秒）
@@ -437,7 +438,7 @@ const I18N = {
     appTagline: 'Every second you focus is a day in the pond',
     badgeIdle: 'IDLE', badgeFocus: 'FOCUS', badgeBreak: 'BREAK', badgeLong: 'LONG BREAK',
     vitalsAria: 'Pond vitals', vitalsTitle: 'POND VITALS',
-    oxygen: 'Oxygen', quality: 'Water quality', bio: 'Diversity',
+    oxygen: 'Oxygen', quality: 'Water Quality', bio: 'Diversity',
     careBtn: 'Tend the pond',
     speciesAria: 'Species guide', speciesTitle: 'SPECIES GUIDE',
     taskPh: 'What are you focusing on? (optional)',
@@ -487,7 +488,9 @@ const I18N = {
     shrimpBorn: 'Generation {0} shrimp settled on the floor',
     tadpoleMature: 'A tadpole became a frog and hopped onto a lily pad',
     frogEggs: 'Frogs laid {0} eggs — generation {1} tadpoles hatched',
-    endangered: 'Only one {0} left — the population is endangered!',
+    endangeredFish: 'Only one fish left — the population is endangered!',
+    endangeredShrimp: 'Only one shrimp left — the population is endangered!',
+    endangeredFrog: 'Only one frog left — the population is endangered!',
     fishReturn: 'A pair of fish followed your ripples and moved in',
     shrimpReturn: 'A shrimp moved back onto the floor',
     eggsReturn: 'A new clutch of frog eggs appeared',
@@ -578,7 +581,9 @@ const I18N = {
     shrimpBorn: '第 {0} 代小虾在池底安家',
     tadpoleMature: '一只蝌蚪长成了青蛙，跳上了睡莲叶',
     frogEggs: '青蛙产下 {0} 枚卵，第 {1} 代蝌蚪孵化',
-    endangered: '{0}只剩最后一只了，种群濒危！',
+    endangeredFish: '小鱼只剩最后一只了，种群濒危！',
+    endangeredShrimp: '虾只剩最后一只了，种群濒危！',
+    endangeredFrog: '青蛙只剩最后一只了，种群濒危！',
     fishReturn: '一对小鱼循着专注的涟漪迁居而来',
     shrimpReturn: '一只虾重新搬进了池底',
     eggsReturn: '水面又出现了一窝蛙卵',
@@ -668,6 +673,33 @@ const els = {
   speciesList: $('speciesList'), diaryList: $('diaryList'),
   toast: $('toast'), srTimer: $('srTimer'),
 };
+
+// ---------- 设备偏好：语言 / 静音 / 通知（属于"这台设备"，不进池塘存档） ----------
+// 与池塘数据分开存：导出 / 导入 / 恢复备份都不应改变界面偏好。
+// 首次升级时把旧存档里的 settings 迁过来一次；全新用户按系统语言猜。
+const prefs = { mute: false, notify: true, lang: 'en' };
+function savePrefs() { try { localStorage.setItem(CONFIG.prefsKey, JSON.stringify(prefs)); } catch (e) {} }
+(function loadPrefs() {
+  let loaded = null;
+  try { loaded = JSON.parse(localStorage.getItem(CONFIG.prefsKey) || 'null'); } catch (e) {}
+  if (loaded && typeof loaded === 'object') {
+    if (typeof loaded.mute === 'boolean') prefs.mute = loaded.mute;
+    if (typeof loaded.notify === 'boolean') prefs.notify = loaded.notify;
+    if (typeof loaded.lang === 'string' && I18N[loaded.lang]) prefs.lang = loaded.lang;
+    return;
+  }
+  let s = null;
+  try { const old = JSON.parse(localStorage.getItem(CONFIG.saveKey) || 'null'); s = old && old.settings; } catch (e) {}
+  if (s && typeof s === 'object') {
+    if (typeof s.mute === 'boolean') prefs.mute = s.mute;
+    if (typeof s.notify === 'boolean') prefs.notify = s.notify;
+    if (typeof s.lang === 'string' && I18N[s.lang]) prefs.lang = s.lang;
+  } else if (typeof navigator.language === 'string' && navigator.language.toLowerCase().startsWith('zh')) {
+    prefs.lang = 'zh';
+  }
+  savePrefs();
+})();
+LANG = prefs.lang;
 
 // ---------- 提示浮层 ----------
 let toastTimer = 0;
@@ -1382,7 +1414,7 @@ const pond = {
   oxygen: 90,          // 氧气 0-100
   waterQuality: 80,    // 水质 0-100
   history: {},         // { 'YYYY-MM-DD': { total, tags:{tag:n} } }
-  settings: { mute: false, notify: true, lang: 'en' }, // lang：界面语言（'en' 默认 | 'zh'）
+  settings: prefs,       // 设备偏好（语言/静音/通知）的引用：见上方 prefs 块，不进池塘存档
   careReadyAt: 0,      // 照料按钮冷却时间戳
   pendingEco: 0,       // 已结算、待消化的生态秒（积压队列，封顶 ecoCatchupCap）
   bestStreak: 0,       // 历史最长连续天数（长期目标）
@@ -1407,9 +1439,9 @@ const pond = {
     const dq = 0.25 + this.shrimp.length * 0.05 - this.detritus.length * 0.08;
     this.waterQuality = clamp(this.waterQuality + dq * dtEco, 0, 100);
     // 濒危提示（每 60 生态秒最多一次/物种）
-    this.endangeredCheck('sp_fish', this.fish.length);
-    if (this.unlockedShrimp()) this.endangeredCheck('sp_shrimp', this.shrimp.length);
-    if (this.unlockedTadpole()) this.endangeredCheck('sp_frog', this.frogs.length + this.tadpoles.length);
+    this.endangeredCheck('endangeredFish', this.fish.length);
+    if (this.unlockedShrimp()) this.endangeredCheck('endangeredShrimp', this.shrimp.length);
+    if (this.unlockedTadpole()) this.endangeredCheck('endangeredFrog', this.frogs.length + this.tadpoles.length);
   },
 
   // ---- 分帧消化积压的生态时间：每帧最多 300 步，避免大补算卡帧 ----
@@ -1419,12 +1451,12 @@ const pond = {
     this.pendingEco -= steps;
   },
 
-  endangeredCheck(key, count) { // key：物种翻译键（也用作提示节流的标识）
+  endangeredCheck(logKey, count) { // logKey：日记翻译键（也用作提示节流的标识）
     if (count === 1) {
-      const last = this._warnAt[key] || -999;
+      const last = this._warnAt[logKey] || -999;
       if (this.ecoSeconds - last > 60) {
-        this._warnAt[key] = this.ecoSeconds;
-        this.log('endangered', [t(key)], true);
+        this._warnAt[logKey] = this.ecoSeconds;
+        this.log(logKey, [], true);
       }
     }
   },
@@ -1665,7 +1697,6 @@ const pond = {
     const data = {
       version: CONFIG.saveVersion,
       savedAt: Date.now(),
-      settings: this.settings,
       pomo: {
         state: pomo.state, paused: pomo.paused, endAt: pomo.endAt,
         remainMs: pomo.remainMs, totalMs: pomo.totalMs, cycle: pomo.cycle,
@@ -1748,9 +1779,7 @@ const pond = {
     this.history = (eco.history && typeof eco.history === 'object') ? eco.history : {};
     this.pendingEco = this._num(eco.pendingEco, 0, 0, CONFIG.ecoCatchupCap);
     this.bestStreak = this._num(eco.bestStreak, 0, 0);
-    this.settings = Object.assign({ mute: false, notify: true, lang: 'en' }, data.settings);
-    if (!I18N[this.settings.lang]) this.settings.lang = 'en'; // 语言代码校验：不认识的一律回英文
-    LANG = this.settings.lang;
+    // 设备偏好（语言/静音/通知）独立存储：导入 / 恢复存档不覆盖，见 prefs 块
 
     const wSrc = (Array.isArray(data.weeds) ? data.weeds : []).slice(0, 20);
     this.weeds = wSrc.map((d, i) => {
@@ -1869,9 +1898,7 @@ const pond = {
     let old = null;
     try { old = JSON.parse(localStorage.getItem('eco-pond-v1')); } catch (e) {}
     if (!old || typeof old !== 'object') return false;
-    // v1 存档没有 settings：恢复默认设置（含语言），不沿用内存中的旧值
-    this.settings = { mute: false, notify: true, lang: 'en' };
-    LANG = this.settings.lang;
+    // v1 迁移不动设备偏好（语言/静音/通知独立存储，见 prefs 块）
     this.ecoSeconds = this._num(old.ecoSeconds, 0, 0);
     // 旧版没记真实专注时长，按生态时间折算（近似值，解锁不吃亏）
     this.totalFocusSec = this._num(old.totalFocusSec, this.ecoSeconds, 0);
@@ -2171,10 +2198,7 @@ els.fileImport.onchange = () => {
       }
       settleEcoTime();          // 先结算当前档，再被覆盖
       pond.applyData(data);
-      els.chkMute.checked = pond.settings.mute;
-      els.chkNotify.checked = pond.settings.notify;
-      els.selLang.value = pond.settings.lang; // 导入的存档可能带另一种语言
-      applyLang();
+      applyLang(); // 界面语言不动（属于设备偏好），只重渲染导入的数据
       pond.save();
       toast(t('importToast'));
       pond.log('importLog');
@@ -2246,19 +2270,19 @@ els.btnReset.onclick = () => {
 };
 
 // 设置开关
-els.chkMute.onchange = () => { pond.settings.mute = els.chkMute.checked; pond.save(); };
+els.chkMute.onchange = () => { pond.settings.mute = els.chkMute.checked; savePrefs(); };
 els.chkNotify.onchange = () => {
   pond.settings.notify = els.chkNotify.checked;
   if (pond.settings.notify) ensureNotifyPermission(); // 手势里请求权限
   updateNotifyHint();
-  pond.save();
+  savePrefs();
 };
-// 语言切换：立即生效并持久化（写入 settings.lang，随存档/导出走）
+// 语言切换：立即生效并持久化（设备偏好独立存储，不随池塘存档/导出走）
 els.selLang.onchange = () => {
   pond.settings.lang = els.selLang.value;
   LANG = pond.settings.lang;
   applyLang();
-  pond.save();
+  savePrefs();
 };
 
 // 计时中修改时长：给出"下阶段生效"的反馈
@@ -2358,7 +2382,7 @@ if (pond.load()) {
 }
 els.chkMute.checked = pond.settings.mute;
 els.chkNotify.checked = pond.settings.notify;
-els.selLang.value = pond.settings.lang; // 存档里记住的语言（默认 en）
+els.selLang.value = pond.settings.lang; // 设备偏好里记住的语言（无存档时按系统语言猜）
 refreshBackupEntry();
 applyLang();
 requestAnimationFrame(loop);
