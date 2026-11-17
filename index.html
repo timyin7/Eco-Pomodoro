@@ -1,0 +1,2112 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>生态番茄钟 · 池塘</title>
+<style>
+  /* ---------- 基础：深色有机水潭主题 ---------- */
+  :root {
+    --ink: #0b141c;            /* 页面底色：深夜的水 */
+    --ink-2: #101d28;          /* 面板底色 */
+    --line: #22363f;           /* 分隔线 */
+    --text: #ece5d5;           /* 暖白文字 */
+    --text-dim: #a7b4be;       /* 次要文字（提高对比度） */
+    --amber: #e8b04b;          /* 专注阳光 */
+    --moon: #8fb8d8;           /* 休息月色 */
+    --leaf: #7fb069;           /* 水草绿 */
+    --danger: #e07a7a;
+    --radius: 14px;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { height: 100%; }
+  body {
+    background:
+      radial-gradient(120% 90% at 70% -10%, #14232f 0%, var(--ink) 55%),
+      var(--ink);
+    color: var(--text);
+    font-family: "PingFang SC", "Microsoft YaHei", "Noto Sans SC", system-ui, sans-serif;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: clamp(12px, 3vw, 32px);
+    gap: 18px;
+    min-height: 100%;
+  }
+  :focus-visible { outline: 2px solid var(--amber); outline-offset: 2px; }
+
+  /* ---------- 标题 ---------- */
+  header { text-align: center; }
+  header h1 {
+    font-family: Georgia, "Songti SC", "STSong", serif;
+    font-weight: 600;
+    font-size: clamp(24px, 3.4vw, 34px);
+    letter-spacing: 0.08em;
+  }
+  header h1 em { color: var(--leaf); font-style: normal; }
+  header p { margin-top: 6px; color: var(--text-dim); font-size: 13px; letter-spacing: 0.2em; }
+
+  /* ---------- 主布局：左池塘，右面板 ---------- */
+  main {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 330px;
+    gap: 18px;
+    width: min(1160px, 100%);
+    align-items: start;
+  }
+  @media (max-width: 900px) { main { grid-template-columns: 1fr; } }
+
+  /* ---------- 池塘画布 ---------- */
+  .pond-wrap {
+    position: relative;
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    overflow: hidden;
+    background: #0d2231;
+    box-shadow: 0 24px 60px -30px rgba(0,0,0,0.8);
+  }
+  canvas#pond { display: block; width: 100%; height: auto; }
+  .pond-badge {
+    position: absolute;
+    top: 12px; left: 12px;
+    padding: 5px 12px;
+    border-radius: 999px;
+    font-size: 12px;
+    letter-spacing: 0.15em;
+    background: rgba(9, 18, 25, 0.75);
+    border: 1px solid var(--line);
+    color: var(--text);
+    transition: color .6s, border-color .6s;
+    pointer-events: none;
+  }
+  .pond-badge[data-state="focus"] { color: var(--amber); border-color: rgba(232,176,75,.5); }
+  .pond-badge[data-state="break"], .pond-badge[data-state="longBreak"] { color: var(--moon); border-color: rgba(143,184,216,.45); }
+
+  /* ---------- 池塘体征（水质/氧气/多样性） ---------- */
+  .vitals, .species {
+    margin-top: 14px;
+    padding: 14px;
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    background: var(--ink-2);
+  }
+  .vitals h2, .species h2, .diary h2 {
+    font-size: 12px; letter-spacing: .3em; color: var(--text-dim);
+    font-weight: 500; margin-bottom: 8px;
+  }
+  .vitals { display: flex; flex-direction: column; gap: 8px; }
+  .vital-row { display: grid; grid-template-columns: 64px 1fr 38px; align-items: center; gap: 10px; font-size: 12px; }
+  .vital-row label { color: var(--text-dim); }
+  .vital-row output { text-align: right; font-variant-numeric: tabular-nums; }
+  .vital-track { height: 6px; border-radius: 999px; background: #0a141c; overflow: hidden; }
+  .vital-fill { height: 100%; border-radius: 999px; transition: width .6s ease-out, background .6s; }
+  .vital-fill.good { background: #7fb069; }
+  .vital-fill.warn { background: #e8b04b; }
+  .vital-fill.bad  { background: #e07a7a; }
+  .vitals .care-btn { align-self: flex-end; font-size: 12px; padding: 6px 14px; }
+
+  /* ---------- 物种图鉴 ---------- */
+  .species ul { list-style: none; display: flex; flex-direction: column; gap: 6px; }
+  .species li { display: flex; align-items: center; gap: 10px; font-size: 13px; }
+  .species .glyph { width: 26px; text-align: center; font-size: 16px; }
+  .species .sname { flex: 1; }
+  .species .scount { font-variant-numeric: tabular-nums; color: var(--text-dim); font-size: 12px; }
+  .species li.locked { color: var(--text-dim); }
+  .species li.locked .glyph { filter: blur(2px) grayscale(1); opacity: .55; }
+  .species li.endangered .sname, .species li.endangered .scount { color: var(--amber); }
+
+  /* ---------- 右侧控制面板 ---------- */
+  .panel { display: flex; flex-direction: column; gap: 16px; }
+
+  /* 计时器是主信息：字号最大、层级最高 */
+  .timer-box { text-align: center; padding: 6px 0 2px; }
+  .timer-label { font-size: 12px; letter-spacing: 0.3em; color: var(--text-dim); text-transform: uppercase; }
+  .timer-display {
+    font-family: Georgia, "Times New Roman", serif;
+    font-size: clamp(64px, 8vw, 84px);
+    line-height: 1.05;
+    font-variant-numeric: tabular-nums;
+    margin: 6px 0 4px;
+    transition: color .6s;
+  }
+  .timer-display[data-state="focus"] { color: var(--amber); }
+  .timer-display[data-state="break"], .timer-display[data-state="longBreak"] { color: var(--moon); }
+  .timer-sub { font-size: 13px; color: var(--text-dim); min-height: 1.5em; }
+  .progress-track { height: 5px; border-radius: 999px; background: var(--line); overflow: hidden; margin: 12px 4px 0; }
+  .progress-fill { height: 100%; width: 0%; border-radius: 999px; background: var(--amber); transition: width .4s linear, background .6s; }
+  .progress-fill[data-state="break"], .progress-fill[data-state="longBreak"] { background: var(--moon); }
+
+  /* ---------- 任务 ---------- */
+  .task-row { display: flex; gap: 8px; }
+  .task-row input, .task-row select {
+    font: inherit; font-size: 13px; color: var(--text);
+    background: var(--ink-2); border: 1px solid var(--line);
+    border-radius: 10px; padding: 8px 10px; min-width: 0;
+  }
+  .task-row input { flex: 1; }
+  .task-row input::placeholder { color: #5d6d78; }
+
+  /* ---------- 按钮 ---------- */
+  .btn-row { display: flex; gap: 10px; flex-wrap: wrap; justify-content: center; }
+  button {
+    font: inherit; font-size: 14px; color: var(--text);
+    background: transparent; border: 1px solid var(--line);
+    border-radius: 999px; padding: 9px 18px; cursor: pointer;
+    transition: transform .15s ease-out, border-color .2s, background .2s, color .2s;
+  }
+  button:hover:not(:disabled) { border-color: var(--text-dim); transform: translateY(-1px); }
+  button:active:not(:disabled) { transform: translateY(0); }
+  button.primary { background: var(--amber); border-color: var(--amber); color: #1c1405; font-weight: 600; }
+  button.primary:hover:not(:disabled) { background: #f0bf62; }
+  button.ghost-danger.armed, button.armed { border-color: var(--danger); color: var(--danger); }
+  button:disabled { opacity: .4; cursor: not-allowed; }
+
+  /* ---------- 设置行 ---------- */
+  .dur-row, .set-row {
+    display: flex; justify-content: center; gap: 8px; flex-wrap: wrap;
+    font-size: 12px; color: var(--text-dim); align-items: center;
+  }
+  .dur-row select {
+    font: inherit; font-size: 12px; color: var(--text);
+    background: var(--ink-2); border: 1px solid var(--line);
+    border-radius: 8px; padding: 4px 6px;
+  }
+  .set-row label { display: inline-flex; align-items: center; gap: 5px; cursor: pointer; }
+  .set-row input { accent-color: var(--amber); }
+  .set-row .sep { color: var(--line); }
+  #btnExport, #btnImport, #btnRestore { font-size: 12px; padding: 4px 12px; }
+  .notify-hint { font-size: 11px; color: var(--danger); }
+
+  /* ---------- 长期目标：池龄段位 ---------- */
+  .rank-row {
+    display: flex; align-items: center; gap: 10px;
+    padding: 10px 14px;
+    border: 1px solid var(--line); border-radius: var(--radius);
+    background: var(--ink-2); font-size: 12px;
+  }
+  .rank-name { font-family: Georgia, "Songti SC", serif; font-size: 15px; color: var(--amber); letter-spacing: .1em; }
+  .rank-track { flex: 1; height: 5px; border-radius: 999px; background: #0a141c; overflow: hidden; }
+  .rank-fill { height: 100%; width: 0%; background: var(--leaf); border-radius: 999px; transition: width .6s ease-out; }
+  .rank-next { color: var(--text-dim); white-space: nowrap; }
+  .rank-sub { font-size: 11px; color: var(--text-dim); text-align: center; margin-top: -8px; }
+  .rank-sub b { color: var(--text); font-weight: 600; }
+
+  /* ---------- 统计 ---------- */
+  .stats {
+    display: grid; grid-template-columns: repeat(3, 1fr); gap: 1px;
+    background: var(--line); border: 1px solid var(--line);
+    border-radius: var(--radius); overflow: hidden;
+  }
+  .stat { background: var(--ink-2); padding: 12px 6px; text-align: center; }
+  .stat b { display: block; font-family: Georgia, serif; font-size: 20px; font-weight: 600; }
+  .stat span { font-size: 11px; color: var(--text-dim); letter-spacing: .1em; }
+
+  /* ---------- 池塘日记 ---------- */
+  .diary ul { list-style: none; display: flex; flex-direction: column; gap: 6px; }
+  .diary li { font-size: 13px; color: var(--text-dim); padding-left: 14px; position: relative; animation: diary-in .5s ease-out; }
+  .diary li:first-child { color: var(--text); }
+  .diary li.warn { color: var(--amber); }
+  .diary li::before {
+    content: ""; position: absolute; left: 0; top: .55em;
+    width: 5px; height: 5px; border-radius: 50%; background: var(--leaf);
+  }
+  .diary li.warn::before { background: var(--amber); }
+  @keyframes diary-in { from { opacity: 0; transform: translateY(-4px); } to { opacity: 1; transform: none; } }
+
+  /* ---------- 提示浮层 ---------- */
+  #toast {
+    position: fixed; left: 50%; bottom: 28px; transform: translateX(-50%) translateY(12px);
+    background: var(--ink-2); border: 1px solid var(--line); color: var(--text);
+    padding: 9px 18px; border-radius: 999px; font-size: 13px;
+    opacity: 0; pointer-events: none; transition: opacity .3s, transform .3s;
+    z-index: 10; max-width: 90vw; text-align: center;
+  }
+  #toast.show { opacity: 1; transform: translateX(-50%); }
+
+  footer { color: var(--text-dim); font-size: 12px; letter-spacing: .1em; text-align: center; }
+  kbd { font-family: inherit; border: 1px solid var(--line); border-radius: 5px; padding: 1px 6px; font-size: 11px; }
+
+  .sr-only {
+    position: absolute; width: 1px; height: 1px; overflow: hidden;
+    clip: rect(0 0 0 0); white-space: nowrap;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after { animation-duration: .01ms !important; transition-duration: .01ms !important; }
+  }
+  @media (max-width: 480px) {
+    .stat b { font-size: 17px; }
+    .btn-row button { flex: 1; }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>生态番茄钟 · <em>池塘</em></h1>
+  <p>你专注的每一秒，都是池塘里的一天</p>
+</header>
+
+<main>
+  <!-- 左：池塘 + 体征 + 图鉴 -->
+  <section>
+    <div class="pond-wrap">
+      <canvas id="pond" width="960" height="600"></canvas>
+      <div class="pond-badge" id="pondBadge" data-state="idle">待 机</div>
+    </div>
+
+    <div class="vitals" aria-label="池塘体征">
+      <h2>池 塘 体 征</h2>
+      <div class="vital-row">
+        <label for="vOxygen">氧气</label>
+        <div class="vital-track"><div class="vital-fill good" id="vOxygen"></div></div>
+        <output id="vOxygenVal">--</output>
+      </div>
+      <div class="vital-row">
+        <label for="vQuality">水质</label>
+        <div class="vital-track"><div class="vital-fill good" id="vQuality"></div></div>
+        <output id="vQualityVal">--</output>
+      </div>
+      <div class="vital-row">
+        <label for="vBio">多样性</label>
+        <div class="vital-track"><div class="vital-fill good" id="vBio"></div></div>
+        <output id="vBioVal">--</output>
+      </div>
+      <button class="care-btn" id="btnCare">照料池塘</button>
+    </div>
+
+    <div class="species" aria-label="物种图鉴">
+      <h2>物 种 图 鉴</h2>
+      <ul id="speciesList"></ul>
+    </div>
+  </section>
+
+  <!-- 右：计时 + 控制 + 统计 + 日记 -->
+  <aside class="panel">
+    <div class="timer-box">
+      <div class="timer-label" id="timerLabel">POMODORO</div>
+      <div class="timer-display" id="timerDisplay" data-state="idle">25:00</div>
+      <div class="timer-sub" id="timerSub" aria-live="polite">按下「开始专注」，唤醒池塘</div>
+      <div class="progress-track"><div class="progress-fill" id="progressFill" data-state="focus"></div></div>
+    </div>
+
+    <div class="task-row">
+      <input id="taskInput" type="text" maxlength="24" placeholder="这次专注做什么？（可选）" aria-label="任务名称">
+      <select id="tagSelect" aria-label="任务标签">
+        <option value="学习">学习</option>
+        <option value="工作">工作</option>
+        <option value="阅读">阅读</option>
+        <option value="创作">创作</option>
+        <option value="其他">其他</option>
+      </select>
+    </div>
+
+    <div class="btn-row">
+      <button class="primary" id="btnStart">开始专注</button>
+      <button id="btnPause" disabled>暂停</button>
+      <button id="btnSkip" disabled>跳过</button>
+    </div>
+
+    <div class="dur-row">
+      专注
+      <select id="selFocus">
+        <option value="5">5 分钟</option>
+        <option value="15">15 分钟</option>
+        <option value="25" selected>25 分钟</option>
+        <option value="45">45 分钟</option>
+        <option value="60">60 分钟</option>
+      </select>
+      短休
+      <select id="selBreak">
+        <option value="3">3 分钟</option>
+        <option value="5" selected>5 分钟</option>
+        <option value="10">10 分钟</option>
+      </select>
+      长休
+      <select id="selLong">
+        <option value="10">10 分钟</option>
+        <option value="15" selected>15 分钟</option>
+        <option value="20">20 分钟</option>
+        <option value="30">30 分钟</option>
+      </select>
+    </div>
+
+    <div class="set-row">
+      <label><input type="checkbox" id="chkMute"> 静音</label>
+      <span class="sep">·</span>
+      <label><input type="checkbox" id="chkNotify" checked> 系统通知</label>
+      <span class="sep">·</span>
+      <button id="btnExport">导出存档</button>
+      <span class="sep">·</span>
+      <button id="btnImport">导入存档</button>
+      <input type="file" id="fileImport" accept=".json,application/json" hidden>
+      <span class="sep">·</span>
+      <button id="btnRestore" hidden>恢复备份</button>
+      <span id="notifyHint" class="notify-hint"></span>
+    </div>
+
+    <div class="stats">
+      <div class="stat"><b id="statFocus">0min</b><span>累计专注</span></div>
+      <div class="stat"><b id="statToday">0</b><span>今日番茄</span></div>
+      <div class="stat"><b id="statStreak">0</b><span>连续天数</span></div>
+      <div class="stat"><b id="statEco">0</b><span>生态日</span></div>
+      <div class="stat"><b id="statFish">0</b><span>生物(只)</span></div>
+      <div class="stat"><b id="statGen">1</b><span>最高世代</span></div>
+    </div>
+
+    <div class="rank-row" title="长期目标：段位由累计专注时长决定">
+      <span class="rank-name" id="rankName">泉眼</span>
+      <div class="rank-track"><div class="rank-fill" id="rankFill"></div></div>
+      <span class="rank-next" id="rankNext"></span>
+    </div>
+    <div class="rank-sub">最长连续 <b id="statBest">0</b> 天 · 物种全解锁后，向更高段位进发</div>
+
+    <div class="diary">
+      <h2>池 塘 日 记</h2>
+      <ul id="diaryList" aria-live="polite"></ul>
+    </div>
+
+    <div class="btn-row">
+      <button class="ghost-danger" id="btnReset">重置生态</button>
+    </div>
+  </aside>
+</main>
+
+<footer>空格键 开始 / 暂停 · 本地自动存档 · 离开期间生态最多补算 30 分钟</footer>
+<div id="toast" role="status"></div>
+<span class="sr-only" id="srTimer" aria-live="polite"></span>
+
+<script>
+/* ============================================================
+ * 生态番茄钟 · 池塘生态模拟（单文件版 v2）
+ *
+ * 核心规则：番茄钟推动生态演化
+ *   - 专注时：生态时间全速流动（1 倍），阳光洒进池塘
+ *   - 休息时：生态时间慢速流动（0.25 倍），月色萤火
+ *   - 待机 / 暂停：生物照常游动，但不成长、不饥饿、不繁衍
+ * 累计的真实专注时长解锁新物种（约 1h / 5h / 20h）。
+ * ============================================================ */
+
+const canvas = document.getElementById('pond');
+const ctx = canvas.getContext('2d');
+
+// ---------- 全局配置 ----------
+const CONFIG = {
+  breakEcoRate: 0.25,        // 休息时生态时间流速（专注 = 1）
+  ecoSecondsPerDay: 60,      // 多少生态秒折算 1 个"生态日"（显示用）
+  fishCap: 14,               // 各物种数量上限（密度制约）
+  shrimpCap: 8,
+  tadpoleCap: 10,
+  frogCap: 6,
+  koiCap: 3,
+  padCap: 4,
+  planktonBaseCap: 16,       // 浮游生物基础上限（水草会提高它）
+  unlockShrimpFocus: 3600,   // 累计真实专注 1h  → 解锁虾
+  unlockTadpoleFocus: 18000, // 累计真实专注 5h  → 解锁蝌蚪/青蛙
+  unlockKoiFocus: 72000,     // 累计真实专注 20h → 解锁锦鲤
+  longBreakEvery: 4,         // 每 4 个番茄进入长休息
+  saveKey: 'eco-pond-v2',
+  backupKey: 'eco-pond-v2.backup',
+  saveVersion: 2,
+  careCooldown: 90,          // "照料池塘"冷却（真实秒）
+  ecoCatchupCap: 1800,       // 后台/休眠补算生态时间的上限（秒）
+  weedO2Rate: 0.5,           // 每株长满的水草产氧速率（/生态秒），6 株约 3.0/s
+                             // 校准：满员池塘耗氧约 2.6/s，休息期 3.0 略有余量（回氧），
+                             // 专注期再 +0.3 → 3.3，明显回氧。过密（含锦鲤满员 3.05）才缓慢下降
+};
+
+// ---------- 小工具 ----------
+const rand = (a, b) => a + Math.random() * (b - a);
+const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
+const pick = arr => arr[Math.floor(Math.random() * arr.length)];
+const REDUCED = matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+// 画布逻辑尺寸：生物坐标统一用 CSS 逻辑像素，渲染时按 DPR 缩放
+let dprScale = 1;
+const W = () => canvas.width / dprScale;
+const H = () => canvas.height / dprScale;
+
+const fmt = ms => { // mm:ss
+  const s = Math.ceil(ms / 1000);
+  return `${String(Math.floor(s / 60)).padStart(2, '0')}:${String(s % 60).padStart(2, '0')}`;
+};
+function fmtDur(sec) { // 时长显示：修正分钟进位（59.7min 会显示 60min 的 bug）
+  sec = Math.round(sec);
+  let h = Math.floor(sec / 3600);
+  let m = Math.round((sec - h * 3600) / 60);
+  if (m === 60) { h += 1; m = 0; }
+  return h ? `${h}h${String(m).padStart(2, '0')}m` : `${m}min`;
+}
+const dateKey = (d = new Date()) => d.toLocaleDateString('sv'); // 本地 YYYY-MM-DD
+
+// ---------- DOM 缓存 ----------
+const $ = id => document.getElementById(id);
+const els = {
+  display: $('timerDisplay'), label: $('timerLabel'), sub: $('timerSub'),
+  fill: $('progressFill'), badge: $('pondBadge'),
+  btnStart: $('btnStart'), btnPause: $('btnPause'), btnSkip: $('btnSkip'),
+  btnReset: $('btnReset'), btnCare: $('btnCare'), btnExport: $('btnExport'),
+  btnRestore: $('btnRestore'), notifyHint: $('notifyHint'),
+  btnImport: $('btnImport'), fileImport: $('fileImport'),
+  rankName: $('rankName'), rankFill: $('rankFill'), rankNext: $('rankNext'), statBest: $('statBest'),
+  statFocus: $('statFocus'), statToday: $('statToday'), statStreak: $('statStreak'),
+  statEco: $('statEco'), statFish: $('statFish'), statGen: $('statGen'),
+  selFocus: $('selFocus'), selBreak: $('selBreak'), selLong: $('selLong'),
+  taskInput: $('taskInput'), tagSelect: $('tagSelect'),
+  chkMute: $('chkMute'), chkNotify: $('chkNotify'),
+  vOxygen: $('vOxygen'), vQuality: $('vQuality'), vBio: $('vBio'),
+  vOxygenVal: $('vOxygenVal'), vQualityVal: $('vQualityVal'), vBioVal: $('vBioVal'),
+  speciesList: $('speciesList'), diaryList: $('diaryList'),
+  toast: $('toast'), srTimer: $('srTimer'),
+};
+
+// ---------- 提示浮层 ----------
+let toastTimer = 0;
+function toast(msg) {
+  els.toast.textContent = msg;
+  els.toast.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => els.toast.classList.remove('show'), 3200);
+}
+
+// ---------- 提示音（WebAudio，遵守自动播放策略：必须在用户手势里 resume） ----------
+let audioCtx = null;
+function ensureAudio() {
+  try {
+    audioCtx = audioCtx || new (window.AudioContext || window.webkitAudioContext)();
+    if (audioCtx.state === 'suspended') audioCtx.resume();
+  } catch (e) { /* 不支持则静默 */ }
+}
+function chime(freq) {
+  if (pond.settings.mute || !audioCtx || audioCtx.state !== 'running') return;
+  try {
+    const o = audioCtx.createOscillator();
+    const g = audioCtx.createGain();
+    o.frequency.value = freq;
+    g.gain.setValueAtTime(0.08, audioCtx.currentTime);
+    g.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.6);
+    o.connect(g).connect(audioCtx.destination);
+    o.start();
+    o.stop(audioCtx.currentTime + 0.6);
+  } catch (e) {}
+}
+
+// ---------- 系统通知 ----------
+// 权限只在用户手势里请求（浏览器要求）；不可用/被拒时退回页面内 toast 提示
+function notify(title, body) {
+  if (!pond.settings.notify) return;
+  if ('Notification' in window && Notification.permission === 'granted') {
+    try { new Notification(title, { body, silent: true }); return; } catch (e) {}
+  }
+  toast(`${title} · ${body}`); // 页面内兜底
+}
+function ensureNotifyPermission() {
+  // file:// 或无通知能力的环境下直接放弃，由 notify() 走 toast 兜底
+  if (!pond.settings.notify || !('Notification' in window)) return;
+  if (Notification.permission === 'default') {
+    const r = Notification.requestPermission(); // 旧浏览器不返回 Promise
+    if (r && typeof r.then === 'function') r.then(updateNotifyHint).catch(() => {});
+  }
+}
+function updateNotifyHint() {
+  if (!pond.settings.notify) { els.notifyHint.textContent = ''; return; }
+  if (!('Notification' in window) || Notification.permission === 'denied') {
+    els.notifyHint.textContent = '系统通知不可用，仅页面内提示';
+  } else if (Notification.permission === 'default') {
+    els.notifyHint.textContent = '尚未授权，点开始专注时会请求';
+  } else {
+    els.notifyHint.textContent = '';
+  }
+}
+
+/* ============================================================
+ * 第一部分：番茄钟状态机
+ * idle → focus →（完成）→ break / longBreak →（完成）→ idle
+ * 计时以 Date.now() 时间戳（endAt）为准，刷新/切后台都不丢
+ * ============================================================ */
+
+// 生态时间锚点：任何状态切换前，先用【旧状态速率】结算已流逝时间，再切换。
+// 结算结果进入 pond.pendingEco 积压队列，由主循环分帧消化（每帧 ≤300 生态秒）。
+let ecoAnchor = Date.now();
+function currentEcoRate() {
+  if (pomo.paused) return 0;
+  if (pomo.state === 'focus') return 1;
+  if (pomo.isBreak()) return CONFIG.breakEcoRate;
+  return 0;
+}
+function settleEcoTime(until) {
+  const t = until ?? Date.now();
+  const rate = currentEcoRate();
+  const elapsed = Math.max(0, (t - ecoAnchor) / 1000);
+  ecoAnchor = t;
+  if (rate <= 0 || elapsed <= 0) return;
+  const added = elapsed * rate;
+  const room = CONFIG.ecoCatchupCap - pond.pendingEco;
+  pond.pendingEco += Math.min(added, room);
+  if (added > room && Date.now() - (pond._capToastAt || 0) > 60000) {
+    pond._capToastAt = Date.now();
+    toast('后台补算已达 30 分钟上限');
+    pond.log('离开太久了，生态补算按 30 分钟封顶', true);
+  }
+  if (added >= 60) pond.log(`你离开了一阵，池塘悄悄流逝了 ${Math.round(added)} 生态秒`);
+}
+
+const pomo = {
+  state: 'idle',        // idle | focus | break | longBreak
+  paused: false,
+  endAt: 0,             // 当前阶段结束的时间戳（ms）
+  remainMs: 0,          // 暂停时记下剩余毫秒
+  totalMs: 0,           // 当前阶段总时长（算进度条用）
+  cycle: 0,             // 本轮已连续完成的番茄数（决定长休息）
+  task: '',             // 任务名
+  tag: '学习',          // 任务标签
+
+  focusMin() { return +els.selFocus.value; },
+  breakMin() { return +els.selBreak.value; },
+  longMin() { return +els.selLong.value; },
+  isBreak() { return this.state === 'break' || this.state === 'longBreak'; },
+
+  start(state, quiet = false) { // quiet：页面加载恢复时不碰音频
+    settleEcoTime();           // 先结算旧状态（待机速率为 0，仅刷新锚点）
+    if (!quiet) ensureAudio(); // 通知权限只在按钮手势里请求，此处不碰
+    this.state = state;
+    this.paused = false;
+    const min = state === 'focus' ? this.focusMin() : state === 'longBreak' ? this.longMin() : this.breakMin();
+    this.totalMs = min * 60000;
+    this.endAt = Date.now() + this.totalMs;
+    if (state === 'focus') {
+      this.task = els.taskInput.value.trim();
+      this.tag = els.tagSelect.value;
+      pond.log('开始专注，阳光照进池塘');
+    } else {
+      pond.log(state === 'longBreak' ? '完成一轮四个番茄，进入长休息' : '休息片刻，池塘进入月夜');
+    }
+    syncUI();
+    pond.save();
+  },
+  pauseToggle() {
+    if (this.state === 'idle') return;
+    settleEcoTime(); // 暂停前按当前速率结算；恢复前按 0 速率结算
+    ensureAudio();
+    if (!this.paused) {
+      this.paused = true;
+      this.remainMs = Math.max(0, this.endAt - Date.now());
+    } else {
+      this.paused = false;
+      this.endAt = Date.now() + this.remainMs;
+    }
+    syncUI();
+    pond.save();
+  },
+  skip() { this.finish(true); },
+
+  // 到点 / 跳过：专注与休息对称衔接
+  finish(skipped = false) {
+    const kind = this.state;
+    if (kind === 'idle') return;
+    // 区间结算关键：先按【旧状态速率】把生态时间结算到阶段终点，再切换状态
+    settleEcoTime(Math.min(Date.now(), this.endAt));
+    // 跨阶段的那段"尾巴"（例如睡眠/挂起期间越过 endAt 的时间）直接丢弃：
+    // 它既不该按旧速率（如专注 ×1）记账，也不该回拨锚点，否则会串率或算出巨额 elapsed。
+    // 注意：只往前推，绝不回拨（从 idle 启动时 this.endAt 可能是很久以前的旧值）。
+    ecoAnchor = Date.now();
+    if (kind === 'focus') {
+      if (!skipped) {
+        this.creditFocus(this.totalMs);          // 记账：番茄数、历史、专注时长
+        pond.log(`第 ${pond.sessions} 个番茄完成，池塘又热闹了一些`);
+        chime(880);
+        notify('专注完成', this.task ? `「${this.task}」完成了，休息一下吧` : '完成一个番茄，休息一下吧');
+        pond.repopulate();                        // 灭绝不是终点：专注唤回生命
+        this.start(this.cycle % CONFIG.longBreakEvery === 0 ? 'longBreak' : 'break');
+        return;
+      }
+      pond.log('跳过了这次专注');
+      this.state = 'idle';
+    } else {
+      if (!skipped) {
+        chime(660);
+        notify('休息结束', '池塘在等你，开始下一个专注吧');
+      }
+      pond.log(kind === 'longBreak' ? '长休息结束，精神饱满了'
+        : skipped ? '提前结束休息' : '休息结束，可以继续专注了');
+      this.state = 'idle';
+    }
+    this.paused = false;
+    syncUI();
+    pond.save();
+  },
+
+  // 完成一次专注的记账（正常到点 & 离线补记共用）
+  creditFocus(ms) {
+    pond.sessions += 1;
+    pond.totalFocusSec += ms / 1000;
+    this.cycle += 1;
+    const k = dateKey();
+    const h = pond.history[k] = pond.history[k] || { total: 0, tags: {} };
+    h.total += 1;
+    h.tags[this.tag] = (h.tags[this.tag] || 0) + 1;
+    pond.bestStreak = Math.max(pond.bestStreak, pond.streakDays()); // 刷新最长连续纪录
+    pond.checkUnlocks(); // 专注时长是解锁依据，记账后立刻检查
+  },
+
+  remain() {
+    if (this.state === 'idle') return this.focusMin() * 60000;
+    return this.paused ? this.remainMs : Math.max(0, this.endAt - Date.now());
+  },
+
+  // 到点检测：rAF（可见时）与 setInterval（后台兜底）都会调用
+  check() {
+    if (this.state !== 'idle' && !this.paused && Date.now() >= this.endAt) this.finish(false);
+  },
+};
+
+/* ============================================================
+ * 第二部分：生物们
+ * update(dtVisual, dtEco) 双时钟约定：
+ *   dtVisual —— 真实帧间隔（秒），只用于游动/动画
+ *   dtEco    —— 生态时间增量（秒），驱动成长、饥饿、繁衍、死亡
+ * ============================================================ */
+
+// 生物基类：位置 + 游动 + 边界反弹
+class Creature {
+  constructor(x, y) {
+    this.x = x ?? Math.random() * W();
+    this.y = y ?? Math.random() * H();
+    this.vx = rand(-1, 1);
+    this.vy = rand(-1, 1);
+    this.age = 0;                    // 生态秒
+    this.maxAge = rand(500, 900);    // 寿命（生态秒）
+    this.gen = 1;                    // 世代
+    this.dead = false;
+  }
+  swim(dt, speed = 60) { // 基础游动：惯性 + 随机转向 + 边界反弹
+    this.x += this.vx * speed * dt;
+    this.y += this.vy * speed * dt;
+    if (Math.random() < 0.02) {
+      this.vx += rand(-0.4, 0.4);
+      this.vy += rand(-0.4, 0.4);
+    }
+    const sp = Math.hypot(this.vx, this.vy) || 1;
+    if (sp > 1.2) { this.vx = this.vx / sp * 1.2; this.vy = this.vy / sp * 1.2; }
+    if (this.x < 10 || this.x > W() - 10) this.vx *= -1;
+    if (this.y < 10 || this.y > H() - 10) this.vy *= -1;
+    this.x = clamp(this.x, 10, W() - 10);
+    this.y = clamp(this.y, 10, H() - 10);
+  }
+  growOld(dtEco) {
+    this.age += dtEco;
+    if (this.age > this.maxAge) this.dead = true;
+  }
+  get lifeStage() { // 0 幼体 1 成年 2 老年
+    const r = this.age / this.maxAge;
+    return r < 0.25 ? 0 : r < 0.8 ? 1 : 2;
+  }
+}
+
+// ---------- 浮游生物：食物链地基，生态时间滋养它们 ----------
+class Plankton extends Creature {
+  constructor(x, y) {
+    super(x, y);
+    this.size = rand(1.5, 3);
+    this.maxAge = rand(200, 400);
+    this.phase = Math.random() * Math.PI * 2;
+  }
+  update(dtV, dtEco) {
+    this.phase += dtV;
+    this.y += Math.sin(this.phase) * 8 * dtV;
+    this.x += Math.cos(this.phase * 0.7) * 5 * dtV;
+    this.x = clamp(this.x, 5, W() - 5);
+    this.y = clamp(this.y, 5, H() - 5);
+    this.growOld(dtEco);
+  }
+  draw() {
+    ctx.fillStyle = 'rgba(180, 230, 200, 0.75)';
+    ctx.beginPath();
+    ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+    ctx.fill();
+  }
+}
+
+// ---------- 水草：扎根池底，产氧、供养浮游生物 ----------
+// 高度按"画布高度占比"存储（不是像素）：这样窗口缩放时不会全体顶到水面被裁成一样长
+class Weed {
+  constructor(x) {
+    // 横向位置也按画布宽度占比存，换窗口宽度时水草不会漂出画布
+    this.xFrac = clamp((x ?? 0) / Math.max(1, W()), 0.03, 0.97);
+    // 目标高度：每簇随机 35%~85% 画布高度 —— 高低错落，不再是齐刷刷一排
+    this.maxFrac = rand(0.35, 0.85);
+    // 初始高度：从"刚发芽"到"接近目标"之间随机，每簇起步就不一样
+    this.hFrac = rand(0.04, this.maxFrac * 0.8);
+    // 生长速度：每簇不同（每生态秒长占画布高度的千分之几），生长节奏不是同一条直线
+    this.growRate = rand(0.0009, 0.0026);
+    this.sway = Math.random() * Math.PI * 2;
+    this.wave = rand(0.75, 1.25);     // 摆动频率，各不相同
+    this.lean = rand(-1, 1);          // 整簇的倾斜方向
+    this.spread = rand(5, 11);        // 叶片间距
+    this.stemW = rand(2.2, 3.8);      // 茎粗
+    this.tone = rand(-1, 1);          // 叶色：-1 偏暗，+1 偏亮青
+    this.blades = 2 + Math.floor(Math.random() * 4);
+  }
+  // 兼容旧代码/存档：像素坐标/高度仍可读
+  get x() { return this.xFrac * W(); }
+  get h() { return this.hFrac * H(); }
+  get maxH() { return this.maxFrac * H(); }
+  update(dtV, dtEco) {
+    this.sway += dtV;
+    if (this.hFrac < this.maxFrac) {
+      // 越接近目标长得越慢：先抽条、后定型，避免所有水草同时"插满"
+      const ease = 1 - 0.6 * (this.hFrac / this.maxFrac);
+      this.hFrac = Math.min(this.maxFrac, this.hFrac + dtEco * this.growRate * ease);
+    }
+  }
+  draw() {
+    const H0 = H();
+    const h = this.hFrac * H0;
+    // 每簇叶色略有差别，避免一片死绿
+    const r = Math.round(104 + this.tone * 16);
+    const g = Math.round(158 + this.tone * 24);
+    const b = Math.round(80 - this.tone * 8);
+    ctx.strokeStyle = `rgba(${r}, ${g}, ${b}, 0.8)`;
+    ctx.lineWidth = this.stemW;
+    ctx.lineCap = 'round';
+    const swayAmp = (REDUCED ? 3 : 10) * (0.6 + this.lean * 0.4);
+    for (let i = 0; i < this.blades; i++) {
+      const off = (i - (this.blades - 1) / 2) * this.spread;
+      const bend = Math.sin(this.sway * this.wave + i * 1.7) * swayAmp;
+      // 同一簇里每片长短再错开 82%~100%，草尖不会是一刀齐
+      const bladeH = h * (0.82 + 0.18 * (0.5 + 0.5 * Math.sin(i * 2.3 + 1.1)));
+      ctx.beginPath();
+      ctx.moveTo(this.x + off, H0);
+      ctx.quadraticCurveTo(
+        this.x + off + bend * 0.3, H0 - bladeH * 0.6,
+        this.x + off + bend, H0 - bladeH
+      );
+      ctx.stroke();
+    }
+  }
+  get biomass() { return clamp(this.hFrac / this.maxFrac, 0, 1); }
+}
+
+// ---------- 鱼：池塘主角。觅食、饥饿、繁衍，体色可遗传变异 ----------
+class Fish extends Creature {
+  constructor(x, y, hue, gen) {
+    super(x, y);
+    this.hue = hue ?? rand(180, 260);
+    this.gen = gen ?? 1;
+    this.size = 5;
+    this.maxSize = rand(10, 15);
+    this.maxAge = rand(600, 1000);
+    this.hunger = 0;                     // 0 饱 → 100 饿死
+    this.breedCd = rand(30, 60);         // 繁衍冷却（生态秒）
+    this.hardy = false;                  // 坚韧物种（锦鲤）设 true：不死于缺氧/饥饿
+    this.wig = Math.random() * Math.PI * 2;
+  }
+  update(dtV, dtEco, pond) {
+    this.wig += dtV * 6;
+
+    // 找吃的：饿了就朝最近的浮游生物游
+    let target = null;
+    if (this.hunger > 40 && pond.plankton.length) {
+      let best = Infinity;
+      for (const p of pond.plankton) {
+        const d = (p.x - this.x) ** 2 + (p.y - this.y) ** 2;
+        if (d < best) { best = d; target = p; }
+      }
+    }
+    if (target) {
+      const d = Math.hypot(target.x - this.x, target.y - this.y) || 1;
+      this.vx += (target.x - this.x) / d * 0.15;
+      this.vy += (target.y - this.y) / d * 0.15;
+      if (d < this.size) {
+        target.dead = true;
+        this.hunger = 0;
+        pond.ripple(this.x, this.y, 8);
+      }
+    }
+    // 缺氧早期信号：浮头（往水面凑）+ 减速，此时还不致命
+    const gasping = pond.oxygen < 40;
+    if (gasping && this.y > H() * 0.35) this.vy -= 0.08;
+    this.swim(dtV, gasping ? 35 : 70);
+    if (!dtEco) return;
+
+    // --- 生命周期（只在生态时间流动时推进） ---
+    this.growOld(dtEco);
+    const hungerRate = pond.oxygen < 20 ? 2.4 : 1.6; // 低氧时消耗加快
+    this.hunger = clamp(this.hunger + dtEco * hungerRate, 0, 100);
+    if (this.hunger >= 100 && !this.hardy) { this.dead = true; pond.log('一条鱼饿死了——浮游生物不够吃', true); }
+    // 极低氧才有低概率死亡， hardy 物种免疫
+    if (!this.dead && !this.hardy && pond.oxygen < 8 && Math.random() < dtEco * 0.003) {
+      this.dead = true; pond.log('氧气耗尽，一条鱼没能撑过去', true);
+    }
+
+    if (this.size < this.maxSize) this.size += dtEco * 0.05;
+
+    // 成年且吃饱 → 繁衍（密度制约）
+    this.breedCd -= dtEco;
+    if (this.lifeStage === 1 && this.hunger < 30 && this.breedCd <= 0
+        && pond.fish.length < CONFIG.fishCap) {
+      this.breedCd = rand(80, 140);
+      const hue = clamp(this.hue + rand(-18, 18), 0, 360); // 色相轻微变异
+      const baby = new Fish(this.x + rand(-20, 20), this.y + rand(-20, 20), hue, this.gen + 1);
+      pond.fish.push(baby);
+      pond.maxGen = Math.max(pond.maxGen, baby.gen);
+      pond.ripple(this.x, this.y, 14);
+      pond.log(`第 ${baby.gen} 代小鱼出生了`);
+    }
+  }
+  draw() {
+    ctx.save();
+    ctx.translate(this.x, this.y);
+    ctx.rotate(Math.atan2(this.vy, this.vx));
+    const s = this.size;
+    const light = this.lifeStage === 2 ? 45 : 60; // 老鱼颜色淡一点
+    ctx.fillStyle = `hsl(${this.hue}, 65%, ${light}%)`;
+    ctx.beginPath();
+    ctx.ellipse(0, 0, s, s / 2, 0, 0, Math.PI * 2);
+    ctx.fill();
+    const wag = Math.sin(this.wig) * s * 0.25;
+    ctx.beginPath();
+    ctx.moveTo(-s, 0);
+    ctx.lineTo(-s * 1.5, -s / 2 + wag);
+    ctx.lineTo(-s * 1.5, s / 2 + wag);
+    ctx.closePath();
+    ctx.fill();
+    ctx.fillStyle = '#0b141c';
+    ctx.beginPath();
+    ctx.arc(s * 0.45, -s * 0.12, Math.max(1, s * 0.09), 0, Math.PI * 2);
+    ctx.fill();
+    ctx.restore();
+  }
+}
+
+// ---------- 锦鲤：20h 专注解锁的长寿金鱼，不繁衍，镇塘之宝 ----------
+class Koi extends Fish {
+  constructor(x, y) {
+    super(x, y, rand(35, 48), 1);  // 金橙色系
+    this.size = 8;
+    this.maxSize = rand(16, 20);
+    this.maxAge = rand(1500, 2400);
+    this.hardy = true;               // 锦鲤不死于缺氧/饥饿，只会寿终
+  }
+  update(dtV, dtEco, pond) {
+    const cd = this.breedCd;   // 复用鱼的游动与进食，但冻结繁衍
+    super.update(dtV, dtEco, pond);
+    this.breedCd = cd;
+  }
+  draw() {
+    super.draw();
+    // 标志性的飘逸长鳍
+    ctx.save();
+    ctx.translate(this.x, this.y);
+    ctx.rotate(Math.atan2(this.vy, this.vx));
+    ctx.strokeStyle = `hsla(${this.hue}, 70%, 70%, 0.6)`;
+    ctx.lineWidth = 1.5;
+    const s = this.size;
+    const wag = Math.sin(this.wig) * s * 0.3;
+    ctx.beginPath();
+    ctx.moveTo(-s, 0);
+    ctx.quadraticCurveTo(-s * 1.8, wag, -s * 2.4, wag * 1.5);
+    ctx.stroke();
+    ctx.restore();
+  }
+}
+
+// ---------- 虾：池底清道夫，吃残骸净化水质 ----------
+class Shrimp extends Creature {
+  constructor(x, y, gen) {
+    super(x, H() - rand(12, 30));
+    if (x !== undefined) { this.x = x; this.y = y; }
+    this.gen = gen ?? 1;
+    this.hue = rand(10, 30);
+    this.size = rand(4, 6);
+    this.maxAge = rand(500, 800);
+    this.hunger = 0;
+    this.breedCd = rand(60, 100);
+  }
+  update(dtV, dtEco, pond) {
+    this.x += this.vx * 30 * dtV;
+    if (Math.random() < 0.01) this.vx *= -1;
+    if (this.x < 10 || this.x > W() - 10) this.vx *= -1;
+    this.y = H() - 12 - Math.sin(this.x * 0.02) * 4;
+    if (!dtEco) return;
+
+    this.growOld(dtEco);
+    this.hunger = clamp(this.hunger + dtEco * 1.2, 0, 100);
+    for (const d of pond.detritus) {
+      if (Math.hypot(d.x - this.x, d.y - this.y) < 10) {
+        d.dead = true;
+        this.hunger = 0;
+        break;
+      }
+    }
+    if (this.hunger >= 100) { this.dead = true; pond.log('一只虾饿死了——池底太干净了', true); }
+    this.breedCd -= dtEco;
+    if (this.lifeStage === 1 && this.hunger < 40 && this.breedCd <= 0
+        && pond.shrimp.length < CONFIG.shrimpCap) {
+      this.breedCd = rand(100, 160);
+      const baby = new Shrimp(this.x + rand(-15, 15), this.y, this.gen + 1);
+      pond.shrimp.push(baby);
+      pond.maxGen = Math.max(pond.maxGen, baby.gen);
+      pond.log(`第 ${baby.gen} 代小虾在池底安家`);
+    }
+  }
+  draw() {
+    ctx.save();
+    ctx.translate(this.x, this.y);
+    ctx.scale(this.vx >= 0 ? 1 : -1, 1);
+    ctx.strokeStyle = `hsl(${this.hue}, 70%, 62%)`;
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.arc(0, -2, this.size, Math.PI * 0.15, Math.PI * 0.95);
+    ctx.stroke();
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    ctx.moveTo(this.size * 0.8, -this.size * 0.6);
+    ctx.lineTo(this.size * 1.8, -this.size * 1.4);
+    ctx.moveTo(this.size * 0.8, -this.size * 0.5);
+    ctx.lineTo(this.size * 1.6, -this.size);
+    ctx.stroke();
+    ctx.restore();
+  }
+}
+
+// ---------- 蝌蚪 → 青蛙：变态发育，成年后跳上睡莲叶 ----------
+class Tadpole extends Creature {
+  constructor(x, y, gen) {
+    super(x, y);
+    this.gen = gen ?? 1;
+    this.size = rand(3, 4);
+    this.maxAge = rand(700, 1100);
+    this.matureAge = rand(120, 180);   // 多久变态成青蛙（生态秒）
+    this.wig = Math.random() * Math.PI * 2;
+  }
+  update(dtV, dtEco, pond) {
+    this.wig += dtV * 10;
+    this.swim(dtV, 45);
+    if (!dtEco) return;
+    this.growOld(dtEco);
+    // 青蛙有数量上限：满员时蝌蚪推迟变态，排队等位置
+    if (this.age > this.matureAge && pond.frogs.length < CONFIG.frogCap) {
+      pond.frogs.push(new Frog(this.x, this.y, this.gen));
+      this.dead = true;
+      pond.log('一只蝌蚪长成了青蛙，跳上了睡莲叶');
+    }
+  }
+  draw() {
+    ctx.save();
+    ctx.translate(this.x, this.y);
+    ctx.rotate(Math.atan2(this.vy, this.vx));
+    ctx.fillStyle = '#3d4a3a';
+    ctx.beginPath();
+    ctx.arc(0, 0, this.size, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.strokeStyle = '#3d4a3a';
+    ctx.lineWidth = 1.5;
+    ctx.beginPath();
+    ctx.moveTo(-this.size, 0);
+    ctx.quadraticCurveTo(-this.size * 2, Math.sin(this.wig) * 3, -this.size * 3, 0);
+    ctx.stroke();
+    ctx.restore();
+  }
+}
+
+class Frog extends Creature {
+  constructor(x, y, gen) {
+    super(x, y);
+    this.gen = gen ?? 1;
+    this.size = rand(6, 8);
+    this.maxAge = rand(800, 1200);
+    this.pad = null;                   // 歇脚的睡莲叶
+    this.hopT = rand(2, 5);            // 下次起跳倒计时
+    this.layCd = rand(150, 250);       // 产卵冷却
+    this.sx = x; this.sy = y;          // 起跳点
+    this.tx = x; this.ty = y;          // 落点
+    this.hopK = 1;                     // 跳跃进度 0→1
+  }
+  update(dtV, dtEco, pond) {
+    if (!this.pad && pond.pads.length) this.pad = pick(pond.pads);
+    if (this.hopK < 1) { // 跳跃抛物线（视觉时间驱动）
+      this.hopK = Math.min(1, this.hopK + dtV * 2);
+      this.x = this.sx + (this.tx - this.sx) * this.hopK;
+      this.y = this.sy + (this.ty - this.sy) * this.hopK - Math.sin(this.hopK * Math.PI) * 40;
+      if (this.hopK >= 1) pond.ripple(this.x, this.y + 6, 12);
+    } else if (this.pad) {
+      this.x = this.pad.x;
+      this.y = this.pad.y - 8;
+    }
+    if (!dtEco) return;
+
+    this.growOld(dtEco);
+    this.hopT -= dtEco;
+    if (this.hopT <= 0 && pond.pads.length) {
+      this.hopT = rand(4, 9);
+      this.sx = this.x; this.sy = this.y;
+      this.pad = pick(pond.pads);
+      this.tx = this.pad.x; this.ty = this.pad.y - 8;
+      this.hopK = 0;
+    }
+    // 成年青蛙产卵 → 新一代蝌蚪（世代循环）
+    this.layCd -= dtEco;
+    if (this.lifeStage === 1 && this.layCd <= 0 && pond.tadpoles.length < CONFIG.tadpoleCap) {
+      this.layCd = rand(200, 300);
+      const n = 2 + Math.floor(Math.random() * 3);
+      for (let i = 0; i < n; i++) {
+        pond.tadpoles.push(new Tadpole(this.x + rand(-25, 25), this.y + rand(15, 40), this.gen + 1));
+      }
+      pond.maxGen = Math.max(pond.maxGen, this.gen + 1);
+      pond.log(`青蛙产下 ${n} 枚卵，第 ${this.gen + 1} 代蝌蚪孵化`);
+    }
+  }
+  draw() {
+    ctx.save();
+    ctx.translate(this.x, this.y);
+    ctx.fillStyle = '#5a8a4a';
+    ctx.beginPath();
+    ctx.ellipse(0, 0, this.size, this.size * 0.75, 0, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.fillStyle = '#6fa05c';
+    ctx.beginPath();
+    ctx.arc(-this.size * 0.4, -this.size * 0.7, this.size * 0.28, 0, Math.PI * 2);
+    ctx.arc(this.size * 0.4, -this.size * 0.7, this.size * 0.28, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.fillStyle = '#0b141c';
+    ctx.beginPath();
+    ctx.arc(-this.size * 0.4, -this.size * 0.7, this.size * 0.12, 0, Math.PI * 2);
+    ctx.arc(this.size * 0.4, -this.size * 0.7, this.size * 0.12, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.restore();
+  }
+}
+
+// ---------- 残骸 / 气泡 / 涟漪 / 萤火 ----------
+class Detritus { // 生物死后的残骸：沉底喂虾，但堆积过多会败坏水质
+  constructor(x, y) {
+    this.x = x; this.y = y;
+    this.size = rand(2, 3.5);
+    this.dead = false;
+  }
+  update(dtV) {
+    this.y += 6 * dtV;
+    if (this.y > H() - 8) this.y = H() - 8;
+  }
+  draw() {
+    ctx.fillStyle = 'rgba(150, 130, 90, 0.6)';
+    ctx.beginPath();
+    ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+    ctx.fill();
+  }
+}
+
+class Bubble {
+  constructor() {
+    this.x = Math.random() * W();
+    this.y = H() + 10;
+    this.r = rand(1, 3.5);
+    this.speed = rand(20, 50);
+    this.dead = false;
+  }
+  update(dtV) {
+    this.y -= this.speed * dtV;
+    this.x += Math.sin(this.y * 0.05) * 0.3;
+    if (this.y < -10) this.dead = true;
+  }
+  draw() {
+    ctx.strokeStyle = 'rgba(200, 230, 240, 0.35)';
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    ctx.arc(this.x, this.y, this.r, 0, Math.PI * 2);
+    ctx.stroke();
+  }
+}
+
+class Ripple {
+  constructor(x, y, r) {
+    this.x = x; this.y = y;
+    this.r = r * 0.3;
+    this.maxR = r * 2.5;
+    this.dead = false;
+  }
+  update(dtV) {
+    this.r += 40 * dtV;
+    if (this.r > this.maxR) this.dead = true;
+  }
+  draw() {
+    ctx.strokeStyle = `rgba(220, 235, 240, ${0.5 * (1 - this.r / this.maxR)})`;
+    ctx.lineWidth = 1.5;
+    ctx.beginPath();
+    ctx.ellipse(this.x, this.y, this.r, this.r * 0.35, 0, 0, Math.PI * 2);
+    ctx.stroke();
+  }
+}
+
+class Firefly { // 休息时的萤火
+  constructor() {
+    this.x = Math.random() * W();
+    this.y = Math.random() * H() * 0.4;
+    this.phase = Math.random() * Math.PI * 2;
+    this.dead = false;
+  }
+  update(dtV) {
+    this.phase += dtV * 2;
+    this.x += Math.sin(this.phase * 0.6) * 15 * dtV;
+    this.y += Math.cos(this.phase * 0.4) * 8 * dtV;
+  }
+  draw() {
+    const glow = (Math.sin(this.phase * 2) + 1) / 2;
+    ctx.fillStyle = `rgba(240, 220, 140, ${0.15 + glow * 0.7})`;
+    ctx.beginPath();
+    ctx.arc(this.x, this.y, 1.8, 0, Math.PI * 2);
+    ctx.fill();
+  }
+}
+
+/* ============================================================
+ * 第三部分：池塘（生态系统管理器 + 存档自愈）
+ * ============================================================ */
+const pond = {
+  fish: [], koi: [], shrimp: [], plankton: [], tadpoles: [], frogs: [],
+  weeds: [], pads: [], detritus: [], bubbles: [], ripples: [], fireflies: [],
+  ecoSeconds: 0,       // 累计生态时间（秒）
+  totalFocusSec: 0,    // 累计真实专注（秒）—— 物种解锁的依据
+  sessions: 0,         // 完成的番茄总数
+  maxGen: 1,
+  oxygen: 90,          // 氧气 0-100
+  waterQuality: 80,    // 水质 0-100
+  history: {},         // { 'YYYY-MM-DD': { total, tags:{tag:n} } }
+  settings: { mute: false, notify: true },
+  careReadyAt: 0,      // 照料按钮冷却时间戳
+  pendingEco: 0,       // 已结算、待消化的生态秒（积压队列，封顶 ecoCatchupCap）
+  bestStreak: 0,       // 历史最长连续天数（长期目标）
+  time: 0,             // 视觉时钟
+  _warnAt: {},         // 濒危提示节流
+  _uShrimp: false, _uTadpole: false, _uKoi: false, // 解锁标记
+
+  // ---- 生态推进：体征增减 + 濒危检查，只在生态时间流动时发生 ----
+  advance(dtEco) {
+    this.ecoSeconds += dtEco;
+    // 氧气：水草光合作用产氧（按株数与长势，6 株长满约 3.0/s）
+    //      + 专注期间额外产氧 0.3/s（水流被搅动）− 生物呼吸耗氧。
+    // 校准目标：满员池塘耗氧 ~2.6/s，休息期 3.0 仍有小幅回氧，
+    //          专注期 3.3 明显回氧，只有全物种过密（含锦鲤 3.05）才缓慢下降
+    let o2in = this.weeds.reduce((s, w) => s + w.biomass, 0) * CONFIG.weedO2Rate;
+    if (pomo.state === 'focus' && !pomo.paused) o2in += 0.3;
+    const o2out = this.fish.length * 0.12 + this.koi.length * 0.15
+      + this.shrimp.length * 0.04 + this.tadpoles.length * 0.03 + this.frogs.length * 0.05;
+    this.oxygen = clamp(this.oxygen + (o2in - o2out) * dtEco, 0, 100);
+    // 水质：残骸污染 − 虾与自然净化
+    const dq = 0.25 + this.shrimp.length * 0.05 - this.detritus.length * 0.08;
+    this.waterQuality = clamp(this.waterQuality + dq * dtEco, 0, 100);
+    // 濒危提示（每 60 生态秒最多一次/物种）
+    this.endangeredCheck('小鱼', this.fish.length);
+    if (this.unlockedShrimp()) this.endangeredCheck('虾', this.shrimp.length);
+    if (this.unlockedTadpole()) this.endangeredCheck('青蛙', this.frogs.length + this.tadpoles.length);
+  },
+
+  // ---- 分帧消化积压的生态时间：每帧最多 300 步，避免大补算卡帧 ----
+  drainEco() {
+    const steps = Math.min(300, Math.floor(this.pendingEco));
+    for (let i = 0; i < steps; i++) this.update(0, 1);
+    this.pendingEco -= steps;
+  },
+
+  endangeredCheck(name, count) {
+    if (count === 1) {
+      const last = this._warnAt[name] || -999;
+      if (this.ecoSeconds - last > 60) {
+        this._warnAt[name] = this.ecoSeconds;
+        this.log(`${name}只剩最后一只了，种群濒危！`, true);
+      }
+    }
+  },
+
+  // ---- 灭绝补救：完成一次专注后，灭绝的物种会重新迁入 ----
+  repopulate() {
+    if (this.fish.length === 0) {
+      this.fish.push(new Fish(), new Fish());
+      this.log('一对小鱼循着专注的涟漪迁居而来');
+    }
+    if (this.unlockedShrimp() && this.shrimp.length === 0) {
+      this.shrimp.push(new Shrimp());
+      this.log('一只虾重新搬进了池底');
+    }
+    if (this.unlockedTadpole() && this.tadpoles.length === 0 && this.frogs.length === 0) {
+      this.tadpoles.push(new Tadpole(), new Tadpole());
+      this.log('水面又出现了一窝蛙卵');
+    }
+    // 锦鲤：已解锁但消失（寿终）→ 重新归来，镇塘之宝不会永久失去
+    if (this.unlockedKoi() && this.koi.length === 0) {
+      this.koi.push(new Koi());
+      this.log('锦鲤循着涟漪又回到了池塘');
+    }
+  },
+
+  // ---- 用户干预：照料池塘（清残渣、注新水，有冷却） ----
+  care() {
+    const now = Date.now();
+    if (now < this.careReadyAt) {
+      toast(`池塘刚被照料过，${Math.ceil((this.careReadyAt - now) / 1000)} 秒后再来`);
+      return;
+    }
+    this.careReadyAt = now + CONFIG.careCooldown * 1000;
+    this.waterQuality = clamp(this.waterQuality + 12, 0, 100);
+    this.oxygen = clamp(this.oxygen + 10, 0, 100);
+    this.detritus.splice(0, Math.ceil(this.detritus.length * 0.3));
+    this.ripple(W() / 2, H() / 2, 30);
+    this.log('你打捞了残渣、注入新水，池塘清亮了一些');
+    this.save();
+  },
+
+  // ---- 物种解锁判定（按累计真实专注时长） ----
+  unlockedShrimp() { return this.totalFocusSec >= CONFIG.unlockShrimpFocus; },
+  unlockedTadpole() { return this.totalFocusSec >= CONFIG.unlockTadpoleFocus; },
+  unlockedKoi() { return this.totalFocusSec >= CONFIG.unlockKoiFocus; },
+  checkUnlocks() {
+    if (this.unlockedShrimp() && !this._uShrimp) {
+      this._uShrimp = true;
+      this.shrimp.push(new Shrimp(), new Shrimp());
+      this.log('坚持专注一小时，一对虾搬进了池底');
+      toast('解锁新物种：虾');
+    }
+    if (this.unlockedTadpole() && !this._uTadpole) {
+      this._uTadpole = true;
+      for (let i = 0; i < 3; i++) this.tadpoles.push(new Tadpole());
+      this.log('累计五小时专注，蝌蚪出现了');
+      toast('解锁新物种：蝌蚪与青蛙');
+    }
+    if (this.unlockedKoi() && !this._uKoi) {
+      this._uKoi = true;
+      this.koi.push(new Koi());
+      this.log('二十小时的沉淀，一条锦鲤悄然游来');
+      toast('解锁新物种：锦鲤');
+    }
+  },
+
+  // ---- 每帧更新 ----
+  update(dtV, dtEco) {
+    this.time += dtV;
+    if (dtEco) {
+      this.advance(dtEco);
+      this.checkUnlocks();
+    }
+
+    // 水草茂盛 → 水面长出睡莲叶（有上限）
+    const grown = this.weeds.filter(w => w.biomass > 0.6).length;
+    if (this.pads.length < Math.min(CONFIG.padCap, Math.floor(grown / 2))) {
+      this.pads.push({ x: rand(80, W() - 80), y: rand(60, H() * 0.35) });
+    }
+
+    // 浮游生物上限：水草加成，水质差时减半
+    let pCap = CONFIG.planktonBaseCap + Math.floor(this.weedBiomass() * 24);
+    if (this.waterQuality < 30) pCap = Math.floor(pCap / 2);
+    if (dtEco && this.plankton.length < pCap && Math.random() < dtEco * 0.5) {
+      this.plankton.push(new Plankton());
+    }
+
+    // 更新所有生物与粒子；死亡生物留下残骸，进入物质循环
+    for (const w of this.weeds) w.update(dtV, dtEco);
+    const upd = (list, ...a) => {
+      for (let i = list.length - 1; i >= 0; i--) {
+        list[i].update(...a);
+        if (list[i].dead) {
+          const c = list[i];
+          if (c instanceof Creature && !(c instanceof Plankton)) {
+            this.detritus.push(new Detritus(c.x, c.y));
+          }
+          list.splice(i, 1);
+        }
+      }
+    };
+    upd(this.plankton, dtV, dtEco);
+    upd(this.fish, dtV, dtEco, this);
+    upd(this.koi, dtV, dtEco, this);
+    upd(this.shrimp, dtV, dtEco, this);
+    upd(this.tadpoles, dtV, dtEco, this);
+    upd(this.frogs, dtV, dtEco, this);
+    upd(this.detritus, dtV);
+    upd(this.bubbles, dtV);
+    upd(this.ripples, dtV);
+    upd(this.fireflies, dtV);
+
+    if (this.detritus.length > 30) this.detritus.splice(0, this.detritus.length - 30);
+
+    // 气泡：专注时更欢
+    const bubbleRate = REDUCED ? 1 : (pomo.state === 'focus' ? 4 : 1.5);
+    if (Math.random() < dtV * bubbleRate) this.bubbles.push(new Bubble());
+    // 萤火只在休息时出现
+    if (pomo.isBreak() && this.fireflies.length < 10 && Math.random() < dtV * 2) {
+      this.fireflies.push(new Firefly());
+    }
+    if (!pomo.isBreak()) this.fireflies.length = 0;
+  },
+
+  weedBiomass() {
+    return this.weeds.reduce((s, w) => s + w.biomass, 0) / Math.max(1, this.weeds.length);
+  },
+
+  // 生物多样性 0-100：五个类群各占 20，按当前数量/健康数量折算
+  biodiversity() {
+    const groups = [
+      [this.plankton.length, 20], [this.fish.length, 6], [this.shrimp.length, 4],
+      [this.tadpoles.length + this.frogs.length, 3], [this.koi.length, 1],
+    ];
+    let score = 0;
+    for (const [n, target] of groups) score += 20 * Math.min(1, n / target);
+    return Math.round(score);
+  },
+
+  creatureCount() {
+    return this.fish.length + this.koi.length + this.shrimp.length + this.plankton.length
+      + this.tadpoles.length + this.frogs.length;
+  },
+
+  ripple(x, y, r) { this.ripples.push(new Ripple(x, y, r)); },
+
+  // ---- 池塘日记 ----
+  log(text, warn = false) {
+    const li = document.createElement('li');
+    li.textContent = text;
+    if (warn) li.className = 'warn';
+    els.diaryList.prepend(li);
+    while (els.diaryList.children.length > 10) els.diaryList.lastChild.remove();
+  },
+
+  /* ---------- 绘制 ---------- */
+  draw() {
+    const w = W(), h = H();
+    const focus = pomo.state === 'focus';
+    const brk = pomo.isBreak();
+
+    // 水体渐变：专注暖青 / 休息深蓝 / 待机偏暗
+    const g = ctx.createLinearGradient(0, 0, 0, h);
+    if (focus) { g.addColorStop(0, '#1a4a5e'); g.addColorStop(1, '#0b2436'); }
+    else if (brk) { g.addColorStop(0, '#14283e'); g.addColorStop(1, '#081424'); }
+    else { g.addColorStop(0, '#123040'); g.addColorStop(1, '#0a1c2a'); }
+    ctx.fillStyle = g;
+    ctx.fillRect(0, 0, w, h);
+    // 水质差 → 水体泛浑浊的黄
+    if (this.waterQuality < 40) {
+      ctx.fillStyle = `rgba(140, 120, 60, ${(40 - this.waterQuality) / 40 * 0.22})`;
+      ctx.fillRect(0, 0, w, h);
+    }
+
+    // 阳光光柱（专注时，随时间微微摆动）
+    if (focus && !REDUCED) {
+      ctx.save();
+      ctx.globalCompositeOperation = 'lighter';
+      for (let i = 0; i < 4; i++) {
+        const cx = w * (0.2 + i * 0.2) + Math.sin(this.time * 0.3 + i) * 30;
+        const grad = ctx.createLinearGradient(cx, 0, cx + 60, h);
+        grad.addColorStop(0, 'rgba(232, 176, 75, 0.10)');
+        grad.addColorStop(1, 'rgba(232, 176, 75, 0)');
+        ctx.fillStyle = grad;
+        ctx.beginPath();
+        ctx.moveTo(cx - 30, 0);
+        ctx.lineTo(cx + 30, 0);
+        ctx.lineTo(cx + 90, h);
+        ctx.lineTo(cx - 90, h);
+        ctx.closePath();
+        ctx.fill();
+      }
+      ctx.restore();
+    }
+
+    // 睡莲叶
+    for (const p of this.pads) {
+      ctx.fillStyle = 'rgba(90, 140, 80, 0.9)';
+      ctx.beginPath();
+      ctx.ellipse(p.x, p.y, 22, 7, 0, 0.15, Math.PI * 2 - 0.3);
+      ctx.lineTo(p.x, p.y);
+      ctx.fill();
+    }
+
+    // 池底
+    ctx.fillStyle = '#1a2a20';
+    ctx.beginPath();
+    ctx.moveTo(0, h);
+    for (let x = 0; x <= w; x += 40) ctx.lineTo(x, h - 8 - Math.sin(x * 0.02) * 5);
+    ctx.lineTo(w, h);
+    ctx.closePath();
+    ctx.fill();
+
+    for (const wd of this.weeds) wd.draw();
+    for (const d of this.detritus) d.draw();
+    for (const p of this.plankton) p.draw();
+    for (const s of this.shrimp) s.draw();
+    for (const t of this.tadpoles) t.draw();
+    for (const f of this.fish) f.draw();
+    for (const k of this.koi) k.draw();
+    for (const fr of this.frogs) fr.draw();
+    for (const b of this.bubbles) b.draw();
+    for (const r of this.ripples) r.draw();
+    for (const f of this.fireflies) f.draw();
+
+    // 缺氧的视觉暗示：水面漂一层苍白
+    if (this.oxygen < 30) {
+      ctx.fillStyle = `rgba(200, 210, 215, ${(30 - this.oxygen) / 30 * 0.12})`;
+      ctx.fillRect(0, 0, w, h * 0.15);
+    }
+    // 待机暗纱："池塘睡着了"
+    if (pomo.state === 'idle') {
+      ctx.fillStyle = 'rgba(6, 12, 18, 0.35)';
+      ctx.fillRect(0, 0, w, h);
+    }
+  },
+
+  /* ---------- 存档：版本号 + 逐字段校验 + 自愈 ---------- */
+  save() {
+    const data = {
+      version: CONFIG.saveVersion,
+      savedAt: Date.now(),
+      settings: this.settings,
+      pomo: {
+        state: pomo.state, paused: pomo.paused, endAt: pomo.endAt,
+        remainMs: pomo.remainMs, totalMs: pomo.totalMs, cycle: pomo.cycle,
+        task: pomo.task, tag: pomo.tag,
+      },
+      eco: {
+        ecoSeconds: this.ecoSeconds, totalFocusSec: this.totalFocusSec,
+        sessions: this.sessions, maxGen: this.maxGen,
+        oxygen: this.oxygen, waterQuality: this.waterQuality,
+        history: this.history, pendingEco: this.pendingEco, bestStreak: this.bestStreak,
+      },
+      weeds: this.weeds.map(w => ({
+        x: w.x,
+        h: w.h, maxH: w.maxH,              // 像素坐标/高度：旧版存档兼容
+        xf: w.xFrac, hf: w.hFrac, mf: w.maxFrac, gr: w.growRate, // 画布占比：新版精确存储
+      })),
+      pads: this.pads.map(p => ({ x: p.x, y: p.y })),
+      fish: this.fish.map(f => ({
+        x: f.x, y: f.y, hue: f.hue, gen: f.gen, age: f.age,
+        maxAge: f.maxAge, size: f.size, maxSize: f.maxSize,
+        hunger: f.hunger, breedCd: f.breedCd,
+      })),
+      koi: this.koi.map(f => ({
+        x: f.x, y: f.y, hue: f.hue, age: f.age,
+        maxAge: f.maxAge, size: f.size, maxSize: f.maxSize, hunger: f.hunger,
+      })),
+      shrimp: this.shrimp.map(s => ({
+        x: s.x, y: s.y, gen: s.gen, age: s.age, maxAge: s.maxAge,
+        size: s.size, hunger: s.hunger, breedCd: s.breedCd, hue: s.hue,
+      })),
+      tadpoles: this.tadpoles.map(t => ({
+        x: t.x, y: t.y, gen: t.gen, age: t.age, maxAge: t.maxAge, matureAge: t.matureAge,
+      })),
+      frogs: this.frogs.map(f => ({
+        x: f.x, y: f.y, gen: f.gen, age: f.age, maxAge: f.maxAge, layCd: f.layCd,
+      })),
+    };
+    try {
+      localStorage.setItem(CONFIG.saveKey, JSON.stringify(data));
+    } catch (e) {
+      toast('存档写入失败（存储空间不足？），本次进度可能丢失');
+    }
+  },
+
+  // 逐字段校验：任何字段损坏都用安全默认值替换
+  _num(v, dflt, min = -1e9, max = 1e9) {
+    return (typeof v === 'number' && isFinite(v)) ? clamp(v, min, max) : dflt;
+  },
+  load() {
+    let raw = null;
+    try { raw = localStorage.getItem(CONFIG.saveKey); } catch (e) {}
+    if (!raw) return this.migrateV1(); // 没有 v2 存档 → 尝试从旧版迁移
+    let data;
+    try {
+      data = JSON.parse(raw);
+      if (!data || typeof data !== 'object' || data.version !== CONFIG.saveVersion) throw new Error('bad');
+    } catch (e) {
+      // 存档损坏：保留"案发现场"后重建，不丢数据
+      try { localStorage.setItem(CONFIG.backupKey + '.corrupt', raw); } catch (e2) {}
+      toast('检测到存档损坏，已自动备份并重建池塘');
+      return false;
+    }
+    this.applyData(data);
+    return true;
+  },
+
+  // 应用一份存档数据：load 与「导入存档」共用的逐字段校验/恢复入口
+  applyData(data) {
+    const eco = data.eco || {};
+    // 先清场：这些瞬时对象不进存档，若不清空，旧池塘的浮游生物/残骸会串进新池塘
+    // （导致生物数虚高、多样性瞬间满格），_warnAt 残留还会让濒危提示静默 60 秒
+    this.plankton = []; this.detritus = []; this.bubbles = [];
+    this.ripples = []; this.fireflies = []; this._warnAt = {};
+    this.ecoSeconds = this._num(eco.ecoSeconds, 0, 0);
+    this.totalFocusSec = this._num(eco.totalFocusSec, 0, 0);
+    this.sessions = this._num(eco.sessions, 0, 0);
+    this.maxGen = this._num(eco.maxGen, 1, 1);
+    this.oxygen = this._num(eco.oxygen, 90, 0, 100);
+    this.waterQuality = this._num(eco.waterQuality, 80, 0, 100);
+    this.history = (eco.history && typeof eco.history === 'object') ? eco.history : {};
+    this.pendingEco = this._num(eco.pendingEco, 0, 0, CONFIG.ecoCatchupCap);
+    this.bestStreak = this._num(eco.bestStreak, 0, 0);
+    this.settings = Object.assign({ mute: false, notify: true }, data.settings);
+
+    const wSrc = (Array.isArray(data.weeds) ? data.weeds : []).slice(0, 20);
+    this.weeds = wSrc.map((d, i) => {
+      d = d || {};
+      const w = new Weed(0);
+      const H0 = Math.max(1, H());
+      if (typeof d.mf === 'number' && typeof d.hf === 'number') {
+        // 新版：直接恢复画布占比
+        w.maxFrac = clamp(this._num(d.mf, 0.5, 0.1, 0.95), 0.1, 0.95);
+        w.hFrac = clamp(this._num(d.hf, 0.2, 0.01, 0.95), 0.01, w.maxFrac);
+      } else {
+        // 旧版存档只有像素高度：按当前画布高度换算成占比
+        w.maxFrac = clamp(this._num(d.maxH, 160, 30) / H0, 0.1, 0.95);
+        w.hFrac = clamp(this._num(d.h, 40, 5) / H0, 0.01, w.maxFrac);
+      }
+      w.growRate = clamp(this._num(d.gr, 0.0012, 0.0003, 0.004), 0.0003, 0.004);
+      // 横向位置：新版有 xf 就直接用；旧版只有像素 x，按序号重新均布，
+      // 避免存档是在宽窗口写的、现在窗口变窄后一丛丛堆到右边缘
+      if (typeof d.xf === 'number') {
+        w.xFrac = clamp(this._num(d.xf, 0.3, 0.03, 0.97), 0.03, 0.97);
+      } else {
+        const n = wSrc.length;
+        w.xFrac = clamp((n <= 1 ? 0.5 : 0.1 + 0.8 * i / (n - 1)) + rand(-0.04, 0.04), 0.03, 0.97);
+      }
+      return w;
+    });
+    this.pads = (Array.isArray(data.pads) ? data.pads : []).slice(0, CONFIG.padCap)
+      .map(p => ({ x: this._num(p.x, 200), y: this._num(p.y, 120) }));
+    this.fish = (Array.isArray(data.fish) ? data.fish : []).slice(0, CONFIG.fishCap).map(d => {
+      d = d || {};
+      const f = new Fish(this._num(d.x, 200), this._num(d.y, 200), this._num(d.hue, 220, 0, 360), this._num(d.gen, 1, 1));
+      f.age = this._num(d.age, 0, 0); f.maxAge = this._num(d.maxAge, 800, 100);
+      f.size = this._num(d.size, 6, 2); f.maxSize = this._num(d.maxSize, 12, 4);
+      f.hunger = this._num(d.hunger, 0, 0, 99); f.breedCd = this._num(d.breedCd, 40);
+      return f;
+    });
+    this.koi = (Array.isArray(data.koi) ? data.koi : []).slice(0, CONFIG.koiCap).map(d => {
+      d = d || {};
+      const f = new Koi(this._num(d.x, 200), this._num(d.y, 200));
+      f.hue = this._num(d.hue, 40, 0, 360);
+      f.age = this._num(d.age, 0, 0); f.maxAge = this._num(d.maxAge, 1800, 100);
+      f.size = this._num(d.size, 10, 2); f.maxSize = this._num(d.maxSize, 18, 4);
+      f.hunger = this._num(d.hunger, 0, 0, 99);
+      return f;
+    });
+    this.shrimp = (Array.isArray(data.shrimp) ? data.shrimp : []).slice(0, CONFIG.shrimpCap).map(d => {
+      d = d || {};
+      const s = new Shrimp(this._num(d.x, 200), this._num(d.y, 300), this._num(d.gen, 1, 1));
+      s.age = this._num(d.age, 0, 0); s.maxAge = this._num(d.maxAge, 650, 100);
+      s.size = this._num(d.size, 5, 2); s.hunger = this._num(d.hunger, 0, 0, 99);
+      s.breedCd = this._num(d.breedCd, 80); s.hue = this._num(d.hue, 20, 0, 360);
+      return s;
+    });
+    this.tadpoles = (Array.isArray(data.tadpoles) ? data.tadpoles : []).slice(0, CONFIG.tadpoleCap).map(d => {
+      d = d || {};
+      const t = new Tadpole(this._num(d.x, 200), this._num(d.y, 200), this._num(d.gen, 1, 1));
+      t.age = this._num(d.age, 0, 0); t.maxAge = this._num(d.maxAge, 900, 100);
+      t.matureAge = this._num(d.matureAge, 150, 30);
+      return t;
+    });
+    this.frogs = (Array.isArray(data.frogs) ? data.frogs : []).slice(0, CONFIG.frogCap).map(d => {
+      d = d || {};
+      const f = new Frog(this._num(d.x, 200), this._num(d.y, 100), this._num(d.gen, 1, 1));
+      f.age = this._num(d.age, 0, 0); f.maxAge = this._num(d.maxAge, 1000, 100);
+      f.layCd = this._num(d.layCd, 200);
+      return f;
+    });
+
+    // 恢复解锁标记，避免重复弹"解锁"
+    this._uShrimp = this.unlockedShrimp();
+    this._uTadpole = this.unlockedTadpole();
+    this._uKoi = this.unlockedKoi();
+
+    // ---- 恢复计时器：按 endAt 补记 ----
+    const p = data.pomo || {};
+    pomo.cycle = this._num(p.cycle, 0, 0);
+    pomo.task = typeof p.task === 'string' ? p.task : '';
+    pomo.tag = typeof p.tag === 'string' ? p.tag : '学习';
+    els.taskInput.value = pomo.task;
+    try { els.tagSelect.value = pomo.tag; } catch (e) {}
+    if (p.state && p.state !== 'idle') {
+      const now = Date.now();
+      const endAt = this._num(p.endAt, 0);
+      if (p.paused) {
+        // 暂停中退出：原样恢复剩余时间
+        pomo.state = p.state; pomo.paused = true;
+        pomo.totalMs = this._num(p.totalMs, 25 * 60000, 1000);
+        pomo.remainMs = this._num(p.remainMs, pomo.totalMs, 0, pomo.totalMs);
+        this.log('上次的计时已暂停，随时可以继续');
+      } else if (now < endAt) {
+        // 未到点：无缝续跑
+        pomo.state = p.state; pomo.paused = false;
+        pomo.endAt = endAt;
+        pomo.totalMs = this._num(p.totalMs, 25 * 60000, 1000);
+        this.log('欢迎回来，计时还在继续');
+      } else {
+        // 离开期间已到点：补记结果
+        pomo.totalMs = this._num(p.totalMs, 25 * 60000, 1000);
+        if (p.state === 'focus') {
+          pomo.creditFocus(pomo.totalMs);
+          this.log('你离开时完成了一次专注，已为你记上');
+          pomo.state = 'idle';
+          pomo.start(pomo.cycle % CONFIG.longBreakEvery === 0 ? 'longBreak' : 'break', true);
+        } else {
+          pomo.state = 'idle';
+          this.log('休息在你离开时已结束');
+        }
+      }
+    }
+    ecoAnchor = Date.now(); // 生态结算锚点重置为现在，避免把存档前的间隔再算一遍
+  },
+
+  // v1（双文件旧版）存档迁移
+  migrateV1() {
+    let old = null;
+    try { old = JSON.parse(localStorage.getItem('eco-pond-v1')); } catch (e) {}
+    if (!old || typeof old !== 'object') return false;
+    this.ecoSeconds = this._num(old.ecoSeconds, 0, 0);
+    // 旧版没记真实专注时长，按生态时间折算（近似值，解锁不吃亏）
+    this.totalFocusSec = this._num(old.totalFocusSec, this.ecoSeconds, 0);
+    this.sessions = this._num(old.sessions, 0, 0);
+    this.maxGen = this._num(old.maxGen, 1, 1);
+    const oldWeeds = (Array.isArray(old.weeds) ? old.weeds : []).slice(0, 20);
+    this.weeds = oldWeeds.map((d, i) => {
+      d = d || {};
+      const w = new Weed(0);
+      const H0 = Math.max(1, H());
+      w.maxFrac = clamp(this._num(d.maxH, 160) / H0, 0.1, 0.95);
+      w.hFrac = clamp(this._num(d.h, 40) / H0, 0.01, w.maxFrac);
+      const n = oldWeeds.length;
+      w.xFrac = clamp((n <= 1 ? 0.5 : 0.1 + 0.8 * i / (n - 1)) + rand(-0.04, 0.04), 0.03, 0.97);
+      return w;
+    });
+    this.fish = (Array.isArray(old.fish) ? old.fish : []).map(d => {
+      d = d || {};
+      const f = new Fish(this._num(d.x, 200), this._num(d.y, 200), this._num(d.hue, 220, 0, 360), this._num(d.gen, 1, 1));
+      f.age = this._num(d.age, 0, 0); f.size = this._num(d.size, 6, 2);
+      return f;
+    });
+    if (this.fish.length === 0) for (let i = 0; i < 4; i++) this.fish.push(new Fish());
+    this._uShrimp = this.unlockedShrimp();
+    this._uTadpole = this.unlockedTadpole();
+    this._uKoi = this.unlockedKoi();
+    if (this.unlockedShrimp()) this.shrimp.push(new Shrimp(), new Shrimp());
+    if (this.unlockedTadpole()) for (let i = 0; i < 3; i++) this.tadpoles.push(new Tadpole());
+    try { localStorage.removeItem('eco-pond-v1'); } catch (e) {}
+    this.log('旧池塘的档案已迁移到新版本');
+    return true;
+  },
+
+  // 重置：只重置生态，保留专注统计（累计时长/番茄数/历史）——生态重生，努力不清零
+  reset() {
+    try {
+      const raw = localStorage.getItem(CONFIG.saveKey);
+      if (raw) localStorage.setItem(CONFIG.backupKey, raw); // 留底，可用「恢复备份」找回
+    } catch (e) {}
+    try { localStorage.removeItem(CONFIG.saveKey); } catch (e) {}
+    Object.assign(this, {
+      fish: [], koi: [], shrimp: [], plankton: [], tadpoles: [], frogs: [],
+      weeds: [], pads: [], detritus: [], bubbles: [], ripples: [], fireflies: [],
+      ecoSeconds: 0, maxGen: 1, oxygen: 90, waterQuality: 80, _warnAt: {},
+      pendingEco: 0,
+      // 注意：totalFocusSec / sessions / history / bestStreak 保留
+    });
+    pomo.state = 'idle'; pomo.paused = false; pomo.cycle = 0;
+    seed();
+    // 已解锁的物种直接回归（解锁来自累计专注时长，不随生态重置）
+    this._uShrimp = this.unlockedShrimp();
+    this._uTadpole = this.unlockedTadpole();
+    this._uKoi = this.unlockedKoi();
+    if (this._uShrimp) this.shrimp.push(new Shrimp(), new Shrimp());
+    if (this._uTadpole) for (let i = 0; i < 3; i++) this.tadpoles.push(new Tadpole());
+    if (this._uKoi) this.koi.push(new Koi());
+    this.log(this.totalFocusSec > 0
+      ? '池塘重生了，你的专注积累还在，老物种们悉数回归'
+      : '池塘重生了，一切从浮游生物和小鱼开始');
+    toast('生态已重置（重置前的池塘已备份，可恢复）');
+    syncUI();
+    refreshBackupEntry();
+    this.save();
+  },
+
+  // 导出存档为 JSON 文件
+  export() {
+    this.save();
+    try {
+      const raw = localStorage.getItem(CONFIG.saveKey) || '{}';
+      const blob = new Blob([raw], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `eco-pond-${dateKey()}.json`;
+      document.body.appendChild(a); // 部分浏览器要求链接在 DOM 中才能触发下载
+      a.click();
+      // 延迟回收：立刻 revoke 可能截断下载
+      setTimeout(() => { a.remove(); URL.revokeObjectURL(url); }, 1000);
+      toast('存档已导出');
+    } catch (e) {
+      toast('导出失败');
+    }
+  },
+
+  todayCount() {
+    const h = this.history[dateKey()];
+    return h ? (h.total || 0) : 0;
+  },
+  streakDays() {
+    let streak = 0;
+    const d = new Date();
+    // 今天还没完成番茄时，连续天数算到昨天为止（不打断）
+    if (!this.history[dateKey(d)]) d.setDate(d.getDate() - 1);
+    while (this.history[dateKey(d)] && this.history[dateKey(d)].total > 0) {
+      streak += 1;
+      d.setDate(d.getDate() - 1);
+    }
+    return streak;
+  },
+
+  // ---- 长期目标：池龄段位（由累计专注时长决定，物种全解锁后继续追求） ----
+  rank() {
+    let cur = RANKS[0], next = null;
+    for (let i = 0; i < RANKS.length; i++) {
+      if (this.totalFocusSec >= RANKS[i].sec) cur = RANKS[i];
+      else { next = RANKS[i]; break; }
+    }
+    return { cur, next };
+  },
+};
+
+// 段位阶梯：0h / 10h / 50h / 150h / 400h
+const RANKS = [
+  { sec: 0, name: '泉眼' },
+  { sec: 36000, name: '溪涧' },
+  { sec: 180000, name: '深潭' },
+  { sec: 540000, name: '湖泊' },
+  { sec: 1440000, name: '汪洋' },
+];
+
+// 初始播种：水草 + 浮游生物 + 几条鱼
+function seed() {
+  for (let i = 0; i < 6; i++) {
+    const x = clamp(60 + i * (W() - 120) / 5 + rand(-42, 42), 24, Math.max(48, W() - 24));
+    pond.weeds.push(new Weed(x));
+  }
+  for (let i = 0; i < 10; i++) pond.plankton.push(new Plankton());
+  for (let i = 0; i < 4; i++) pond.fish.push(new Fish());
+}
+
+/* ============================================================
+ * 第四部分：UI（节流刷新 + 物种图鉴 + 体征面板）
+ * ============================================================ */
+const SPECIES_META = [
+  { key: 'plankton', name: '浮游生物', glyph: '✳', unlockSec: 0, count: () => pond.plankton.length },
+  { key: 'fish', name: '小鱼', glyph: '🐟', unlockSec: 0, count: () => pond.fish.length, danger: () => pond.fish.length <= 1 },
+  { key: 'shrimp', name: '虾', glyph: '🦐', unlockSec: CONFIG.unlockShrimpFocus, count: () => pond.shrimp.length, danger: () => pond.shrimp.length <= 1 },
+  { key: 'frog', name: '青蛙', glyph: '🐸', unlockSec: CONFIG.unlockTadpoleFocus, count: () => pond.tadpoles.length + pond.frogs.length, danger: () => pond.tadpoles.length + pond.frogs.length <= 1 },
+  { key: 'koi', name: '锦鲤', glyph: '🎏', unlockSec: CONFIG.unlockKoiFocus, count: () => pond.koi.length },
+];
+
+function renderSpecies() {
+  const frag = document.createDocumentFragment();
+  for (const sp of SPECIES_META) {
+    const li = document.createElement('li');
+    const unlocked = pond.totalFocusSec >= sp.unlockSec;
+    if (unlocked) {
+      const n = sp.count();
+      li.innerHTML = `<span class="glyph">${sp.glyph}</span><span class="sname">${sp.name}</span><span class="scount">${n} 只</span>`;
+      if (sp.danger && sp.danger()) li.classList.add('endangered');
+    } else {
+      const need = sp.unlockSec - pond.totalFocusSec;
+      li.classList.add('locked');
+      li.innerHTML = `<span class="glyph">${sp.glyph}</span><span class="sname">？？？</span><span class="scount">再专注 ${fmtDur(need)} 解锁</span>`;
+    }
+    frag.appendChild(li);
+  }
+  els.speciesList.replaceChildren(frag);
+}
+
+function renderVitals() {
+  const set = (fill, out, v) => {
+    fill.style.width = `${v}%`;
+    fill.className = 'vital-fill ' + (v >= 60 ? 'good' : v >= 30 ? 'warn' : 'bad');
+    out.textContent = Math.round(v);
+  };
+  set(els.vOxygen, els.vOxygenVal, pond.oxygen);
+  set(els.vQuality, els.vQualityVal, pond.waterQuality);
+  set(els.vBio, els.vBioVal, pond.biodiversity());
+}
+
+// 状态变化时刷新按钮/文案
+function syncUI() {
+  const st = pomo.state;
+  els.btnStart.textContent = st === 'idle' ? '开始专注' : st === 'focus' ? '专注中…' : '休息中…';
+  els.btnStart.disabled = st !== 'idle';
+  els.btnPause.disabled = st === 'idle';
+  els.btnPause.textContent = pomo.paused ? '继续' : '暂停';
+  els.btnSkip.disabled = st === 'idle';
+  els.badge.dataset.state = st;
+  els.badge.textContent = st === 'focus' ? '专 注 中' : st === 'break' ? '休 息 中' : st === 'longBreak' ? '长 休 息' : '待 机';
+  els.display.dataset.state = st;
+  els.fill.dataset.state = st;
+  els.label.textContent = st === 'longBreak' ? 'LONG BREAK' : st === 'break' ? 'BREAK' : 'POMODORO';
+  els.sub.textContent =
+    pomo.paused ? '已暂停，池塘时间凝固了' :
+    st === 'focus' ? (pomo.task ? `专注中 · ${pomo.tag} · ${pomo.task}` : `专注中 · ${pomo.tag} · 生态时间 ×1`) :
+    st === 'break' ? '生态时间慢速流动 ×0.25' :
+    st === 'longBreak' ? `每 ${CONFIG.longBreakEvery} 个番茄一次长休息` :
+    pond.ecoSeconds === 0 ? '按下「开始专注」，唤醒池塘' : '池塘睡着了，等待下一次专注';
+  document.title = st === 'idle' ? '生态番茄钟 · 池塘' : `${fmt(pomo.remain())} · 生态番茄钟`;
+}
+
+// 每帧刷新：计时文本按秒节流，统计按 250ms 节流，进度条按变化量节流
+let _lastSec = -1, _lastStats = 0, _lastWidth = '', _lastSrMin = -1;
+function tick(now) {
+  const remain = pomo.remain();
+  const sec = Math.ceil(remain / 1000);
+  if (sec !== _lastSec) {
+    _lastSec = sec;
+    els.display.textContent = fmt(remain);
+    document.title = pomo.state === 'idle' ? '生态番茄钟 · 池塘' : `${fmt(remain)} · 生态番茄钟`;
+    // 屏幕阅读器：只在分钟数变化时播报，避免打扰
+    const min = Math.ceil(remain / 60000);
+    if (pomo.state !== 'idle' && min !== _lastSrMin) {
+      _lastSrMin = min;
+      els.srTimer.textContent = `剩余约 ${min} 分钟`;
+    }
+  }
+  if (pomo.state !== 'idle') {
+    const w = ((1 - remain / pomo.totalMs) * 100).toFixed(1) + '%';
+    if (w !== _lastWidth) { _lastWidth = w; els.fill.style.width = w; }
+  } else if (_lastWidth !== '0%') {
+    _lastWidth = '0%';
+    els.fill.style.width = '0%';
+  }
+  if (now - _lastStats > 250) {
+    _lastStats = now;
+    els.statFocus.textContent = fmtDur(pond.totalFocusSec);
+    els.statToday.textContent = pond.todayCount();
+    els.statStreak.textContent = pond.streakDays();
+    els.statEco.textContent = Math.floor(pond.ecoSeconds / CONFIG.ecoSecondsPerDay);
+    els.statFish.textContent = pond.creatureCount();
+    els.statGen.textContent = pond.maxGen;
+    els.statBest.textContent = pond.bestStreak;
+    // 长期目标：段位进度
+    const r = pond.rank();
+    els.rankName.textContent = r.cur.name;
+    if (r.next) {
+      const pct = (pond.totalFocusSec - r.cur.sec) / (r.next.sec - r.cur.sec) * 100;
+      els.rankFill.style.width = pct.toFixed(1) + '%';
+      els.rankNext.textContent = `再专注 ${fmtDur(r.next.sec - pond.totalFocusSec)} 升至「${r.next.name}」`;
+    } else {
+      els.rankFill.style.width = '100%';
+      els.rankNext.textContent = '最高段位';
+    }
+    renderVitals();
+    renderSpecies();
+  }
+}
+
+/* ---------- 事件绑定 ---------- */
+// 开始/暂停是用户手势：在这里请求通知权限（浏览器要求手势触发）
+els.btnStart.onclick = () => { ensureNotifyPermission(); pomo.start('focus'); };
+els.btnPause.onclick = () => { pomo.pauseToggle(); };
+els.btnSkip.onclick = () => pomo.skip();
+els.btnCare.onclick = () => pond.care();
+els.btnExport.onclick = () => pond.export();
+els.btnImport.onclick = () => els.fileImport.click();
+
+// 导入存档：读取 JSON → 复用 applyData 的逐字段校验
+els.fileImport.onchange = () => {
+  const f = els.fileImport.files && els.fileImport.files[0];
+  els.fileImport.value = ''; // 允许重复导入同一文件
+  if (!f) return;
+  const reader = new FileReader();
+  reader.onload = () => {
+    try {
+      const data = JSON.parse(reader.result);
+      if (!data || typeof data !== 'object' || data.version !== CONFIG.saveVersion) {
+        throw new Error('bad version');
+      }
+      settleEcoTime();          // 先结算当前档，再被覆盖
+      pond.applyData(data);
+      els.chkMute.checked = pond.settings.mute;
+      els.chkNotify.checked = pond.settings.notify;
+      updateNotifyHint();
+      syncUI();
+      pond.save();
+      toast('存档已导入');
+      pond.log('导入了一份池塘档案，水体焕然一新');
+    } catch (e) {
+      toast('导入失败：不是有效的池塘存档文件');
+    }
+  };
+  reader.onerror = () => toast('导入失败：文件读取错误');
+  reader.readAsText(f);
+};
+
+// 恢复重置前的备份（只在备份存在时显示入口）
+function refreshBackupEntry() {
+  let has = false;
+  try { has = !!localStorage.getItem(CONFIG.backupKey); } catch (e) {}
+  els.btnRestore.hidden = !has;
+}
+// 恢复备份：与重置一致的 3 秒武装确认；恢复前把当前档另存为 preRestore
+let restoreArmed = 0;
+els.btnRestore.onclick = () => {
+  const now = Date.now();
+  if (now < restoreArmed) {
+    restoreArmed = 0;
+    els.btnRestore.textContent = '恢复备份';
+    els.btnRestore.classList.remove('armed');
+    try {
+      const raw = localStorage.getItem(CONFIG.backupKey);
+      if (!raw) { toast('没有可用的备份'); return; }
+      const cur = localStorage.getItem(CONFIG.saveKey);
+      if (cur) localStorage.setItem(CONFIG.backupKey + '.preRestore', cur); // 反悔留底
+      localStorage.setItem(CONFIG.saveKey, raw);
+      location.reload(); // 最稳妥的恢复方式：整档重载
+    } catch (e) { toast('恢复失败'); }
+  } else {
+    restoreArmed = now + 3000;
+    els.btnRestore.textContent = '再点一次确认恢复';
+    els.btnRestore.classList.add('armed');
+    setTimeout(() => {
+      if (restoreArmed !== 0 && Date.now() >= restoreArmed) {
+        restoreArmed = 0;
+        els.btnRestore.textContent = '恢复备份';
+        els.btnRestore.classList.remove('armed');
+      }
+    }, 3100);
+  }
+};
+
+// 重置：二次确认（按钮进入"武装"状态，3 秒内再点一次才执行）
+let resetArmed = 0;
+els.btnReset.onclick = () => {
+  const now = Date.now();
+  if (now < resetArmed) {
+    resetArmed = 0;
+    els.btnReset.textContent = '重置生态';
+    els.btnReset.classList.remove('armed');
+    pond.reset();
+  } else {
+    resetArmed = now + 3000;
+    els.btnReset.textContent = '再点一次确认重置';
+    els.btnReset.classList.add('armed');
+    setTimeout(() => {
+      if (resetArmed !== 0 && Date.now() >= resetArmed) {
+        resetArmed = 0;
+        els.btnReset.textContent = '重置生态';
+        els.btnReset.classList.remove('armed');
+      }
+    }, 3100);
+  }
+};
+
+// 设置开关
+els.chkMute.onchange = () => { pond.settings.mute = els.chkMute.checked; pond.save(); };
+els.chkNotify.onchange = () => {
+  pond.settings.notify = els.chkNotify.checked;
+  if (pond.settings.notify) ensureNotifyPermission(); // 手势里请求权限
+  updateNotifyHint();
+  pond.save();
+};
+
+// 计时中修改时长：给出"下阶段生效"的反馈
+for (const sel of [els.selFocus, els.selBreak, els.selLong]) {
+  sel.onchange = () => {
+    if (pomo.state !== 'idle') toast('新时长将在下一阶段生效');
+    else syncUI();
+  };
+}
+els.taskInput.onchange = () => {
+  if (pomo.state === 'focus') { pomo.task = els.taskInput.value.trim(); syncUI(); pond.save(); }
+};
+
+// 空格快捷键：输入控件聚焦时不劫持
+document.addEventListener('keydown', e => {
+  if (e.code !== 'Space') return;
+  const tag = (e.target.tagName || '').toUpperCase();
+  if (['INPUT', 'SELECT', 'TEXTAREA', 'BUTTON'].includes(tag)) return;
+  e.preventDefault();
+  if (pomo.state === 'idle') {
+    ensureNotifyPermission(); // 空格启动也是用户手势，同样请求授权
+    pomo.start('focus');
+  } else {
+    pomo.pauseToggle();
+  }
+});
+
+/* ============================================================
+ * 第五部分：画布自适应（DPR 修正）+ 主循环 + 后台兜底
+ * ============================================================ */
+function resize() {
+  const ratio = 600 / 960; // 保持 16:10
+  const cssW = canvas.parentElement.clientWidth;
+  const cssH = Math.round(cssW * ratio);
+  dprScale = Math.min(2, window.devicePixelRatio || 1); // 超过 2x 收益递减，省显存
+  canvas.style.height = cssH + 'px';
+  canvas.width = Math.round(cssW * dprScale);
+  canvas.height = Math.round(cssH * dprScale);
+  ctx.setTransform(dprScale, 0, 0, dprScale, 0, 0); // 之后全部用 CSS 逻辑坐标绘制
+}
+window.addEventListener('resize', resize);
+
+let last = performance.now();
+function loop(now) {
+  // 真实帧间隔（秒），封顶防止切后台后跳变
+  const dtV = Math.min(0.1, (now - last) / 1000);
+  last = now;
+
+  // 区间结算顺序：check() 到点切换时，finish() 会先按旧速率结算到 endAt；
+  // 随后 settleEcoTime() 按【新】速率结算本帧剩余——两段互不串率
+  pomo.check();
+  settleEcoTime();
+
+  pond.update(dtV, 0); // 视觉/动画（生态推进全走积压队列）
+  pond.drainEco();     // 分帧消化：每帧最多 300 生态秒
+  pond.draw();
+  tick(now);
+  requestAnimationFrame(loop);
+}
+
+// 后台兜底：Chrome 会把隐藏页面的 setInterval 节流到最慢约 1 分钟，
+// 优先用 Worker 定时器（后台不太受节流影响）保证到点切换不丢；
+// Worker 不可用时（如部分 file:// 限制）退回普通定时器 + 返回时按 endAt 重算
+(function startBackgroundTimer() {
+  const tickCheck = () => pomo.check();
+  try {
+    const w = new Worker(URL.createObjectURL(
+      new Blob(['setInterval(() => postMessage(1), 500)'], { type: 'text/javascript' })));
+    w.onMessage = tickCheck;
+  } catch (e) { /* Worker 不可用，走下面的兜底 */ }
+  setInterval(tickCheck, 1000); // 双保险：重复 check 无副作用
+})();
+
+// 可见性变化：隐藏时先按当前速率结算再存档；回来时重算到点，
+// 隐藏期间的生态时间由下一帧 settleEcoTime 按区间速率补进积压队列
+document.addEventListener('visibilitychange', () => {
+  if (document.hidden) {
+    settleEcoTime();
+    pond.save();
+  } else {
+    last = performance.now();
+    pomo.check();
+  }
+});
+
+// 定期存档 + 离开页面前结算并存档
+setInterval(() => { settleEcoTime(); pond.save(); }, 8000);
+window.addEventListener('beforeunload', () => { settleEcoTime(); pond.save(); });
+
+/* ---------- 启动 ---------- */
+resize();
+if (pond.load()) {
+  if (pomo.state === 'idle') pond.log('欢迎回来，池塘还是你离开时的样子');
+} else {
+  seed();
+  pond.log('一方新池塘诞生了，撒下了浮游生物和几条小鱼');
+}
+els.chkMute.checked = pond.settings.mute;
+els.chkNotify.checked = pond.settings.notify;
+refreshBackupEntry();
+updateNotifyHint();
+syncUI();
+requestAnimationFrame(loop);
+</script>
+</body>
+</html>

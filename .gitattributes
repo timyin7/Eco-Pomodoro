@@ -1,0 +1,14 @@
+# 统一换行符：仓库内一律 LF，避免 Windows / macOS 协作时出现整文件改动
+* text=auto eol=lf
+
+# 明确按文本处理
+*.html text
+*.md   text
+*.js   text
+*.json text
+
+# 二进制（图标等）不做换行转换
+*.png  binary
+*.jpg  binary
+*.ico  binary
+*.webp binary

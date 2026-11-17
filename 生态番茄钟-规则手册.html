@@ -1,0 +1,769 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>生态番茄钟 · 规则与数值手册</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%230b2436'/%3E%3Cpath d='M16 25c0-7 6-11 6-11 0 6-3 9-6 11z' fill='%237fd4a8'/%3E%3Cpath d='M16 25c0-5-5-8-5-8 0 5 2 7 5 8z' fill='%235fa886'/%3E%3C/svg%3E">
+<link rel="stylesheet" href="https://miaoda.feishu.cn/fonts/css2?family=Noto+Serif+SC:wght@400;600;700&family=Noto+Sans+SC:wght@300;400;500;700&display=swap">
+<style>
+  :root{
+    --bg:#081a25;
+    --bg-2:#0b2436;
+    --panel:#0e2a3b;
+    --panel-2:#103246;
+    --line:rgba(150,196,210,.16);
+    --line-strong:rgba(150,196,210,.34);
+    --ink:#dceaf0;
+    --ink-2:#a9c2cd;
+    --ink-3:#7d97a3;
+    --accent:#7fd4a8;
+    --accent-dim:#5c9e7e;
+    --warm:#f0c86a;
+    --alert:#e2907c;
+    --serif:"Noto Serif SC","Songti SC","Source Han Serif SC",Georgia,"Times New Roman",serif;
+    --sans:"Noto Sans SC","PingFang SC","Microsoft YaHei",system-ui,sans-serif;
+    --mono:ui-monospace,"SFMono-Regular",Consolas,"Liberation Mono",monospace;
+  }
+  *{box-sizing:border-box}
+  html{ -webkit-text-size-adjust:100% }
+  body{
+    margin:0;
+    background:
+      radial-gradient(1200px 700px at 78% -10%, #12384c 0%, transparent 62%),
+      radial-gradient(900px 600px at 8% 108%, #0d2c33 0%, transparent 60%),
+      linear-gradient(180deg,#081a25 0%,#0a2030 40%,#081a25 100%);
+    color:var(--ink);
+    font-family:var(--sans);
+    font-weight:300;
+    font-size:16px;
+    line-height:1.85;
+  }
+  .wrap{max-width:900px;margin:0 auto;padding:64px 28px 120px}
+
+  /* ---------- 页头 ---------- */
+  .doc-kicker{
+    font-size:13px;color:var(--ink-3);letter-spacing:.04em;
+    margin:0 0 18px;display:flex;gap:10px;align-items:center;flex-wrap:wrap;
+  }
+  .doc-kicker .dot{width:5px;height:5px;border-radius:50%;background:var(--accent-dim)}
+  h1{
+    font-family:var(--serif);font-weight:600;
+    font-size:clamp(30px,5vw,44px);line-height:1.3;
+    margin:0 0 18px;letter-spacing:.01em;
+  }
+  h1 em{font-style:normal;color:var(--accent)}
+  .lede{
+    font-size:16.5px;color:var(--ink-2);max-width:62ch;margin:0 0 6px;
+  }
+  .lede + .lede{margin-top:10px}
+  .meta-line{
+    margin:26px 0 0;padding-top:18px;border-top:1px solid var(--line);
+    display:flex;flex-wrap:wrap;gap:12px 34px;font-size:13.5px;color:var(--ink-3);
+  }
+  .meta-line b{color:var(--ink-2);font-weight:500}
+
+  /* ---------- 目录 ---------- */
+  nav.toc{
+    position:sticky;top:0;z-index:5;
+    margin:40px 0 0;padding:10px 0;
+    background:linear-gradient(180deg,rgba(8,26,37,.97) 62%,rgba(8,26,37,0));
+    backdrop-filter:blur(6px);
+    display:flex;gap:6px;flex-wrap:wrap;
+    border-bottom:1px solid var(--line);
+  }
+  nav.toc a{
+    font-size:12.5px;color:var(--ink-3);text-decoration:none;
+    padding:5px 9px;border:1px solid transparent;border-radius:3px;
+    transition:color .18s,border-color .18s;
+    white-space:nowrap;
+  }
+  nav.toc a:hover,focus-visible{color:var(--accent);border-color:var(--line-strong);outline:none}
+
+  /* ---------- 章节 ---------- */
+  section{margin:64px 0 0;scroll-margin-top:66px}
+  section > h2{
+    font-family:var(--serif);font-weight:600;font-size:24px;line-height:1.4;
+    margin:0 0 6px;color:var(--ink);
+  }
+  section > h2 .tag{
+    font-family:var(--sans);font-size:12px;font-weight:400;color:var(--ink-3);
+    margin-left:10px;vertical-align:2px;
+  }
+  section > h2 + .sub{
+    color:var(--ink-3);font-size:14px;margin:0 0 22px;
+    padding-bottom:14px;border-bottom:1px solid var(--line);
+  }
+  h3{
+    font-family:var(--sans);font-weight:500;font-size:16px;
+    margin:30px 0 8px;color:var(--accent);
+  }
+  h4{font-weight:500;font-size:14.5px;margin:22px 0 6px;color:var(--ink-2)}
+  p{margin:0 0 14px;max-width:64ch}
+  p.wide{max-width:none}
+  strong{color:#eef7fa;font-weight:500}
+  code{
+    font-family:var(--mono);font-size:13.5px;
+    background:rgba(127,212,168,.09);color:#a9e6c4;
+    padding:1px 5px;border-radius:3px;
+  }
+  ul{margin:0 0 16px;padding-left:20px;max-width:64ch}
+  li{margin:6px 0;color:var(--ink-2)}
+  li strong{color:var(--ink)}
+
+  /* ---------- 要点块 ---------- */
+  .note{
+    margin:20px 0;padding:14px 16px;border-radius:3px;
+    background:rgba(127,212,168,.055);
+    border-top:1px solid rgba(127,212,168,.35);
+    font-size:15px;color:var(--ink-2);
+  }
+  .note b{color:var(--accent);font-weight:500}
+  .warn{
+    margin:20px 0;padding:14px 16px;border-radius:3px;
+    background:rgba(240,200,106,.05);
+    border-top:1px solid rgba(240,200,106,.32);
+    font-size:15px;color:var(--ink-2);
+  }
+  .warn b{color:var(--warm);font-weight:500}
+
+  /* ---------- 表格 ---------- */
+  .table-wrap{margin:20px 0;overflow-x:auto}
+  table{
+    width:100%;border-collapse:collapse;table-layout:fixed;
+    font-size:14px;
+  }
+  caption{
+    text-align:left;font-size:12.5px;color:var(--ink-3);
+    padding-bottom:8px;
+  }
+  th,td{
+    padding:9px 10px;text-align:left;vertical-align:middle;
+    border-bottom:1px solid var(--line);font-weight:300;
+  }
+  th{
+    font-weight:500;font-size:12.5px;color:var(--ink-3);
+    border-bottom:1px solid var(--line-strong);
+    white-space:nowrap;
+  }
+  td.num,th.num{font-family:var(--mono);text-align:right;font-variant-numeric:tabular-nums;color:var(--ink);white-space:nowrap}
+  tr.hi td{background:rgba(127,212,168,.05)}
+  td.name{color:var(--ink)}
+  tfoot td{font-size:12.5px;color:var(--ink-3);border-bottom:none;padding-top:10px}
+
+  /* ---------- 公式 ---------- */
+  .formula{
+    font-family:var(--mono);font-size:13.5px;line-height:2;
+    background:rgba(10,34,48,.72);
+    border:1px solid var(--line);
+    border-radius:3px;padding:16px 18px;margin:18px 0;
+    color:#c7dde6;overflow-x:auto;white-space:pre;
+  }
+  .formula .op{color:var(--ink-3)}
+  .formula .hl{color:var(--accent)}
+  .formula .num{color:var(--warm)}
+  .formula .cm{color:var(--ink-3);font-style:italic}
+
+  /* ---------- 循环条 ---------- */
+  .cycle{
+    display:grid;grid-template-columns:repeat(8,1fr);gap:8px;margin:22px 0 8px;
+  }
+  .cycle .cell{
+    border:1px solid var(--line);border-radius:3px;
+    padding:10px 8px 12px;text-align:center;
+  }
+  .cycle .cell .k{font-size:11px;color:var(--ink-3);display:block;margin-bottom:4px}
+  .cycle .cell .v{font-family:var(--mono);font-size:17px;color:var(--ink)}
+  .cycle .cell.focus{border-color:rgba(127,212,168,.3);background:rgba(127,212,168,.06)}
+  .cycle .cell.focus .v{color:#a9e6c4}
+  .cycle .cell.long{border-color:rgba(240,200,106,.34);background:rgba(240,200,106,.07)}
+  .cycle .cell.long .v{color:var(--warm)}
+  .cycle-cap{font-size:12.5px;color:var(--ink-3);margin:0 0 18px}
+
+  /* ---------- 阶梯 ---------- */
+  .ranks{display:grid;grid-template-columns:repeat(5,1fr);gap:10px;margin:20px 0}
+  .ranks div{
+    border-top:1px solid var(--line-strong);padding-top:10px;
+    font-size:13px;color:var(--ink-3);
+  }
+  .ranks b{display:block;font-family:var(--serif);font-size:17px;color:var(--ink);margin-bottom:2px}
+  .ranks .h{font-family:var(--mono);font-size:12.5px;color:var(--warm)}
+
+  /* ---------- SVG 图 ---------- */
+  .viz{margin:22px 0;padding:18px 16px 8px;border:1px solid var(--line);border-radius:3px;background:rgba(10,34,48,.5)}
+  .viz svg{width:100%;height:auto;display:block}
+  .viz figcaption{font-size:12.5px;color:var(--ink-3);margin-top:10px}
+
+  /* ---------- 页脚 ---------- */
+  footer{
+    margin-top:80px;padding-top:22px;border-top:1px solid var(--line);
+    font-size:12.5px;color:var(--ink-3);line-height:1.9;
+  }
+
+  @media (max-width:640px){
+    .wrap{padding:44px 20px 84px}
+    section{margin-top:52px}
+    .cycle{grid-template-columns:repeat(4,1fr)}
+    .ranks{grid-template-columns:repeat(2,1fr)}
+    nav.toc{overflow-x:auto;flex-wrap:nowrap;padding-bottom:8px}
+    table{font-size:13px}
+    th,td{padding:8px 6px}
+  }
+  @media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header>
+    <p class="doc-kicker">规则手册 <span class="dot"></span> 对应 v2 单文件版 <span class="dot"></span> 数值取自代码实际常量</p>
+    <h1>生态番茄钟<br><em>规则与数值</em>手册</h1>
+    <p class="lede">一个把「专注」换成「生态时间」的番茄钟。你专注一分钟，池塘就活一分钟；你休息，它就慢下来；你不开始，它完全静止。</p>
+    <p class="lede">这份手册回答两个问题：<strong>怎么用</strong>，以及<strong>氧气、水质、数量这些数字到底怎么变</strong>。所有数值都能在代码里逐条对上。</p>
+    <div class="meta-line">
+      <span>形态 <b>单文件 HTML，双击即用</b></span>
+      <span>存档 <b>浏览器本地</b></span>
+      <span>联网 <b>不需要</b></span>
+    </div>
+  </header>
+
+  <nav class="toc">
+    <a href="#quick">快速上手</a>
+    <a href="#cycle">一个完整循环</a>
+    <a href="#timer">计时规则</a>
+    <a href="#clock">两套时钟</a>
+    <a href="#o2">氧气</a>
+    <a href="#water">水质</a>
+    <a href="#chain">食物链</a>
+    <a href="#weed">水草与睡莲</a>
+    <a href="#unlock">解锁与段位</a>
+    <a href="#stats">统计口径</a>
+    <a href="#save">存档安全</a>
+    <a href="#table">数值速查</a>
+    <a href="#faq">常见疑问</a>
+  </nav>
+
+  <!-- ============ 快速上手 ============ -->
+  <section id="quick">
+    <h2>快速上手</h2>
+    <p class="sub">六十秒能看懂的全部操作。</p>
+
+    <ul>
+      <li>用浏览器打开 <code>index.html</code>，不需要服务器，不需要登录。</li>
+      <li>在输入框写这次要做什么（<strong>可选</strong>，最多 24 字），再选一个标签：学习 / 工作 / 阅读 / 创作 / 其他。标签只用于日记与统计的归类。</li>
+      <li>选时长：专注 <strong>5 / 15 / 25 / 45 / 60</strong> 分钟（默认 25），短休 <strong>3 / 5 / 10</strong>（默认 5），长休 <strong>10 / 15 / 20 / 30</strong>（默认 15）。</li>
+      <li>点「开始专注」。专注结束后<strong>自动</strong>进入休息；休息结束后回到待机，需要你再点一次才开始下一个番茄。</li>
+      <li>计时中改时长不会打断当前阶段，会在<strong>下一个阶段</strong>生效。</li>
+      <li>不确定池塘状态时，看左边的「池塘体征」：氧气、水质、生物多样性三条。</li>
+    </ul>
+
+    <h3>三个快捷键与三个按钮</h3>
+    <ul>
+      <li><strong>空格</strong>：待机时＝开始专注；计时中＝暂停 / 继续。焦点在输入框、下拉框或按钮内时不响应，避免误触。</li>
+      <li><strong>暂停</strong>：生态时间同时冻结，回来继续时从暂停点算起。</li>
+      <li><strong>跳过</strong>：跳过当前阶段。<strong>跳过专注不计成绩</strong>——不加番茄数、不加累计专注，也不会触发灭绝补救；已流逝的生态时间照常入账。</li>
+      <li><strong>照料池塘</strong>：氧气 +10、水质 +12、打捞 30% 残骸，冷却 <strong>90 秒</strong>。</li>
+      <li><strong>重置生态</strong>：两段式确认（点一次进入待确认，<strong>3 秒内</strong>再点一次才执行）。</li>
+    </ul>
+  </section>
+
+  <!-- ============ 一个完整循环 ============ -->
+  <section id="cycle">
+    <h2>一个完整循环</h2>
+    <p class="sub">四个番茄算一轮，第 4、8、12……个番茄之后是长休。</p>
+
+    <div class="cycle" aria-label="一个四番茄循环">
+      <div class="cell focus"><span class="k">专注</span><span class="v">25</span></div>
+      <div class="cell"><span class="k">短休</span><span class="v">05</span></div>
+      <div class="cell focus"><span class="k">专注</span><span class="v">25</span></div>
+      <div class="cell"><span class="k">短休</span><span class="v">05</span></div>
+      <div class="cell focus"><span class="k">专注</span><span class="v">25</span></div>
+      <div class="cell"><span class="k">短休</span><span class="v">05</span></div>
+      <div class="cell focus"><span class="k">专注</span><span class="v">25</span></div>
+      <div class="cell long"><span class="k">长休</span><span class="v">15</span></div>
+    </div>
+    <p class="cycle-cap">单位为分钟，按默认设置。长休结束后循环从头开始，待机状态需要手动开始下一次专注。</p>
+
+    <p>判定方式很简单：每<strong>完成</strong>一个专注，轮次计数 +1；轮次能被 4 整除时，接下来是长休，否则是短休。跳过或中止的专注不计入轮次，所以不会打乱节奏。</p>
+  </section>
+
+  <!-- ============ 计时规则 ============ -->
+  <section id="timer">
+    <h2>计时规则</h2>
+    <p class="sub">为什么它最小化、切后台、甚至刷新之后都不会停。</p>
+
+    <h3>用时间戳，不用累加秒数</h3>
+    <p>每个阶段开始时记下一个结束时刻 <code>endAt</code>，剩余时间永远由「<code>endAt</code> − 现在」算出，而不是每帧减一。所以最小化、切标签、锁屏都不会让它变慢或停摆。</p>
+    <p>后台另有两道保险：一个 Worker 定时器（每 500 毫秒唤醒一次）加一个普通定时器（每 1 秒），两者都只做一件事——检查是否到点，重复检查没有副作用。浏览器把后台定时器节流到一分钟一次时，最多也就晚一分钟切换，不会丢阶段。</p>
+
+    <h3>关掉页面 / 刷新之后</h3>
+    <ul>
+      <li>离开期间<strong>专注正常计时</strong>：下次打开时如果已过 <code>endAt</code>，会按整段时长补记一个番茄，并自动进入休息。</li>
+      <li>离开期间<strong>池塘不外推</strong>：页面关闭时生态时间冻结（关闭期间的时长会重置锚点丢弃），只有页面还活着（最小化、切标签）才会继续流动。</li>
+      <li>页面存活但被隐藏时，回来会一次性补算，补算<strong>封顶 1800 生态秒</strong>（相当于 30 分钟专注的生态量）。超过上限会提示「后台补算已达 30 分钟上限」。补算不是瞬间灌进去的，而是每帧最多消化 300 步，避免卡顿。</li>
+    </ul>
+
+    <div class="note"><b>为什么补算是区间结算</b>：状态切换前，先用<strong>切换前那个状态的速率</strong>把这段时间结清，再切换。所以「专注 25 分钟 → 回来时已经进入休息」不会把钱按休息的 0.25 倍记账，也不会把休息时间按专注的 1 倍记账。</div>
+
+    <h3>通知</h3>
+    <p>「系统通知」默认开启，但浏览器只允许在用户操作时申请权限，所以权限请求发生在你<strong>点开始、按空格、勾选通知</strong>的那一刻。如果之前拒绝过，页面会在设置行给出提示；用 <code>file://</code> 直接打开时部分浏览器不支持系统通知，此时以页面内的提示音和计时显示为准。</p>
+  </section>
+
+  <!-- ============ 两套时钟 ============ -->
+  <section id="clock">
+    <h2>两套时钟</h2>
+    <p class="sub">这是理解整个池塘的唯一前提：动画时间和生态时间是两回事。</p>
+
+    <div class="table-wrap">
+      <table>
+        <colgroup>
+          <col style="width:26%"><col style="width:20%"><col style="width:54%">
+        </colgroup>
+        <thead>
+          <tr><th>状态</th><th class="num">生态时间流速</th><th>池塘在做什么</th></tr>
+        </thead>
+        <tbody>
+          <tr class="hi"><td class="name">专注中</td><td class="num">1.0×</td><td>全速。成长、饥饿、繁殖、死亡、产氧都按 1 秒 = 1 生态秒推进</td></tr>
+          <tr><td class="name">短休 / 长休</td><td class="num">0.25×</td><td>慢放。4 秒真实时间 = 1 生态秒；萤火出现，水面转夜色</td></tr>
+          <tr><td class="name">待机</td><td class="num">0×</td><td>静止。生物照常游动，但<strong>不成长、不饥饿、不繁殖、不耗氧</strong></td></tr>
+          <tr><td class="name">暂停</td><td class="num">0×</td><td>同待机，计时与生态一起冻结</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <p>换算关系记一句就够：<strong>1 生态秒 ≈ 专注时 1 秒 ≈ 休息时 4 秒</strong>。所以一个 25 分钟番茄 = 1500 生态秒，一次 15 分钟长休 = 225 生态秒。</p>
+    <p>界面上「生态日」是纯展示口径：每 <strong>60 生态秒</strong>记 1 个生态日。</p>
+
+    <div class="warn"><b>这意味着</b>：待机时池塘完全停摆，鱼不会饿死，氧气不会掉。你可以在待机状态放着不管一整天。</div>
+  </section>
+
+  <!-- ============ 氧气 ============ -->
+  <section id="o2">
+    <h2>氧气</h2>
+    <p class="sub">唯一一条你无法直接控制、但决定生死的数值。范围 0-100，初始 90。</p>
+
+    <h3>每秒的收支公式</h3>
+    <div class="formula"><span class="op">产氧</span> o2in <span class="op">=</span> Σ(每株水草的 <span class="hl">biomass</span>) × <span class="num">0.5</span>   <span class="cm">// biomass = 当前高度 / 该株目标高度，0-1</span>
+           <span class="op">+</span> <span class="num">0.3</span>                        <span class="cm">// 仅在专注中（非暂停）</span>
+
+<span class="op">耗氧</span> o2out <span class="op">=</span> 鱼 × <span class="num">0.12</span> <span class="op">+</span> 锦鲤 × <span class="num">0.15</span> <span class="op">+</span> 虾 × <span class="num">0.04</span> <span class="op">+</span> 蝌蚪 × <span class="num">0.03</span> <span class="op">+</span> 青蛙 × <span class="num">0.05</span>
+
+<span class="op">每生态秒</span> oxygen <span class="op">+=</span> (o2in <span class="op">−</span> o2out) <span class="op">×</span> 1   <span class="cm">// 结果夹在 0 与 100 之间</span></div>
+
+    <p>水草长满时六株的 <code>biomass</code> 之和为 6，产氧 3.0 / 生态秒。也就是说：<strong>氧气的上限由水草决定，下限由生物数量决定</strong>，中间这 0.4 至 0.7 的余量就是你养鱼的额度。</p>
+
+    <h3>净收支对照</h3>
+    <div class="table-wrap">
+      <table>
+        <colgroup>
+          <col style="width:40%"><col style="width:20%"><col style="width:20%"><col style="width:20%">
+        </colgroup>
+        <thead>
+          <tr><th>场景</th><th class="num">产氧 / 秒</th><th class="num">耗氧 / 秒</th><th class="num">净 / 秒</th></tr>
+        </thead>
+        <tbody>
+          <tr><td class="name">空池，水草长满</td><td class="num">3.00</td><td class="num">0.00</td><td class="num">+3.00</td></tr>
+          <tr><td class="name">新池：4 条鱼</td><td class="num">3.00</td><td class="num">0.48</td><td class="num">+2.52</td></tr>
+          <tr><td class="name">水草只长到一半（6 株平均 50%）</td><td class="num">1.50</td><td class="num">0.48</td><td class="num">+1.02</td></tr>
+          <tr class="hi"><td class="name">满员，专注中</td><td class="num">3.30</td><td class="num">2.60</td><td class="num">+0.70</td></tr>
+          <tr class="hi"><td class="name">满员，休息中</td><td class="num">3.00</td><td class="num">2.60</td><td class="num">+0.40</td></tr>
+          <tr><td class="name">满员含 3 条锦鲤，专注中</td><td class="num">3.30</td><td class="num">3.05</td><td class="num">+0.25</td></tr>
+          <tr><td class="name">满员含 3 条锦鲤，休息中</td><td class="num">3.00</td><td class="num">3.05</td><td class="num">−0.05</td></tr>
+        </tbody>
+        <tfoot>
+          <tr><td colspan="4">「满员」= 鱼 14 + 虾 8 + 蝌蚪 10 + 青蛙 6，耗氧 2.60；每条锦鲤再加 0.15。只有全物种养到上限、且锦鲤满 3 条时，休息期才会出现 −0.05 的缓慢下滑。</td></tr>
+        </tfoot>
+      </table>
+    </div>
+
+    <div class="viz">
+      <svg viewBox="0 0 720 210" role="img" aria-label="产氧与耗氧的对比条">
+        <g font-family="Noto Sans SC, sans-serif" font-size="12" fill="#a9c2cd">
+          <text x="0" y="16">产氧 · 水草长满（专注中额外 +0.3）</text>
+          <text x="0" y="76">耗氧 · 满员但无锦鲤</text>
+          <text x="0" y="136">耗氧 · 满员且含 3 条锦鲤</text>
+        </g>
+        <!-- 参考线 3.0 -->
+        <line x1="150" y1="4" x2="150" y2="170" stroke="rgba(150,196,210,.35)" stroke-width="1"/>
+        <!-- 产氧条 -->
+        <rect x="150" y="26" width="222" height="20" fill="#5c9e7e" opacity=".85"/>
+        <rect x="372" y="26" width="22" height="20" fill="#7fd4a8"/>
+        <g font-family="ui-monospace, monospace" font-size="12" fill="#dceaf0">
+          <text x="404" y="41">3.00 + 0.30 专注加成</text>
+        </g>
+        <!-- 耗氧条（无锦鲤 2.6） -->
+        <rect x="150" y="86" width="192" height="20" fill="#e2907c" opacity=".78"/>
+        <g font-family="ui-monospace, monospace" font-size="12" fill="#dceaf0">
+          <text x="352" y="101">2.60</text>
+        </g>
+        <!-- 耗氧条（含锦鲤 3.05） -->
+        <rect x="150" y="146" width="226" height="20" fill="#e2907c" opacity=".95"/>
+        <g font-family="ui-monospace, monospace" font-size="12" fill="#dceaf0">
+          <text x="386" y="161">3.05</text>
+        </g>
+        <!-- 刻度 -->
+        <g font-family="ui-monospace, monospace" font-size="11" fill="#7d97a3">
+          <text x="150" y="192">0</text>
+          <text x="368" y="192">3.0</text>
+          <text x="516" y="192">4.0</text>
+        </g>
+        <line x1="150" y1="176" x2="540" y2="176" stroke="rgba(150,196,210,.2)"/>
+      </svg>
+      <figcaption>灰线是 3.0 —— 水草长满的基础产氧。耗氧条越过灰线，氧气就开始下降。</figcaption>
+    </div>
+
+    <h3>低氧的三档后果</h3>
+    <div class="table-wrap">
+      <table>
+        <colgroup>
+          <col style="width:22%"><col style="width:26%"><col style="width:52%">
+        </colgroup>
+        <thead><tr><th class="num">氧气低于</th><th>现象</th><th>机制</th></tr></thead>
+        <tbody>
+          <tr><td class="num">40</td><td>鱼开始浮头</td><td>游向水面并减速一半（速度 70 → 35）；这是预警，还不致命</td></tr>
+          <tr><td class="num">20</td><td>饥饿加速</td><td>饥饿速度从 1.6 升到 <strong>2.4 / 生态秒</strong>，撑不到食物就更快饿死</td></tr>
+          <tr><td class="num">8</td><td>开始死亡</td><td>每条鱼每生态秒有 <strong>0.003</strong> 概率死亡。<br>14 条鱼同时处于这个区间，约 <strong>每秒 4%</strong> 的翻白概率</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="note"><b>怎么把氧气救回来</b>：① 先让水草长满（产氧是唯一的结构性收入）；② 减少耗氧，把鱼养到上限而不是超到上限（上限本身就有密度制约，不会超）；③ 点一次「照料池塘」+10；④ 最有效的其实是<strong>继续专注</strong>——专注期间多 0.3 / 秒。</div>
+    <p>锦鲤是唯一的例外：标记为「坚韧」，<strong>不死于缺氧与饥饿</strong>，只会寿终。</p>
+  </section>
+
+  <!-- ============ 水质 ============ -->
+  <section id="water">
+    <h2>水质</h2>
+    <p class="sub">范围 0-100，初始 80。它是残骸与虾之间的拉锯。</p>
+
+    <div class="formula"><span class="op">每生态秒</span> waterQuality <span class="op">+=</span> <span class="num">0.25</span> <span class="op">+</span> 虾 × <span class="num">0.05</span> <span class="op">−</span> 残骸 × <span class="num">0.08</span></div>
+
+    <div class="table-wrap">
+      <table>
+        <colgroup><col style="width:34%"><col style="width:22%"><col style="width:44%"></colgroup>
+        <thead><tr><th>情况</th><th class="num">每秒变化</th><th>说明</th></tr></thead>
+        <tbody>
+          <tr><td class="name">干净的空池</td><td class="num">+0.25</td><td>自然净化，从 80 到 100 约 80 生态秒</td></tr>
+          <tr><td class="name">8 只虾，无残骸</td><td class="num">+0.65</td><td>虾是净水器</td></tr>
+          <tr><td class="name">无虾，3 个残骸</td><td class="num">+0.01</td><td>基本打平（0.25 − 0.24）</td></tr>
+          <tr><td class="name">无虾，残骸堆到上限 30</td><td class="num">−2.15</td><td>约 30 秒从 100 掉到 40 以下</td></tr>
+          <tr><td class="name">8 只虾 + 8 个残骸</td><td class="num">+0.01</td><td>打平：8 只虾正好抵消 8 个残骸</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <ul>
+      <li><strong>残骸从哪来</strong>：任何生物（浮游生物除外）死亡都会在原地留下 1 个残骸，残骸场上最多留 30 个。</li>
+      <li><strong>残骸怎么消失</strong>：虾会吃——虾与残骸距离小于 10 像素就吃掉，同时饥饿归零。或者你点「照料池塘」打捞 30%。</li>
+      <li><strong>低水质的后果</strong>：低于 <strong>40</strong> 时水体泛出浑浊的黄；低于 <strong>30</strong> 时浮游生物的数量上限直接<strong>减半</strong>，进而影响鱼的口粮。</li>
+    </ul>
+
+    <div class="warn"><b>别过度照料</b>：照料会打捞 30% 的残骸，而残骸正是虾的食物。池塘很干净时频繁照料，虾会因为没有食物而饿死——日记里会写「池底太干净了」。</div>
+  </section>
+
+  <!-- ============ 食物链 ============ -->
+  <section id="chain">
+    <h2>食物链</h2>
+    <p class="sub">浮游生物是一切的地基；每个物种都有自己的寿命、饥饿速度和繁殖条件。</p>
+
+    <h3>浮游生物</h3>
+    <ul>
+      <li>数量上限 = <strong>16 + 平均水草生物量 × 24</strong>，水草长满时约 40；水质低于 30 时上限减半。</li>
+      <li>生成速率约 <strong>0.5 只 / 生态秒</strong>（未到上限时），寿命 200-400 生态秒。</li>
+      <li>它是鱼唯一的食物；鱼饿的时候（饥饿值大于 40）会主动游向最近的一只。</li>
+    </ul>
+
+    <h3>六个物种的完整参数</h3>
+    <div class="table-wrap">
+      <table>
+        <colgroup>
+          <col style="width:11%"><col style="width:9%"><col style="width:13%"><col style="width:23%"><col style="width:22%"><col style="width:22%">
+        </colgroup>
+        <thead>
+          <tr><th>物种</th><th class="num">上限</th><th class="num">寿命</th><th>吃 / 挨饿</th><th>繁殖条件</th><th>备注</th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td class="name">鱼</td><td class="num">14</td><td class="num">600-1000</td>
+            <td>吃浮游生物，饥饿 <strong>1.6</strong>/秒（低氧 2.4）；满 100 饿死</td>
+            <td>成年 + 饥饿低于 30 + 冷却结束，每胎 1 条，冷却 80-140</td>
+            <td>体色随亲代 ±18 色相遗传，世代 +1</td>
+          </tr>
+          <tr>
+            <td class="name">锦鲤</td><td class="num">3</td><td class="num">1500-2400</td>
+            <td>同鱼，但<strong>不会饿死</strong></td>
+            <td>不孕（繁殖冷却被冻结）</td>
+            <td>不死于缺氧，只会寿终；消失后完成一次专注会回来</td>
+          </tr>
+          <tr>
+            <td class="name">虾</td><td class="num">8</td><td class="num">500-800</td>
+            <td>只吃残骸，饥饿 <strong>1.2</strong>/秒；满 100 饿死</td>
+            <td>成年 + 饥饿低于 40 + 冷却，冷却 100-160</td>
+            <td>贴池底活动，顺便净化水质</td>
+          </tr>
+          <tr>
+            <td class="name">蝌蚪</td><td class="num">10</td><td class="num">700-1100</td>
+            <td>不吃东西</td>
+            <td>由青蛙产卵</td>
+            <td>到 <strong>120-180</strong> 生态秒变态成青蛙；青蛙满 6 只时排队不变态</td>
+          </tr>
+          <tr>
+            <td class="name">青蛙</td><td class="num">6</td><td class="num">800-1200</td>
+            <td>不吃东西</td>
+            <td>成年 + 产卵冷却结束，每窝 <strong>2-4</strong> 只，冷却 200-300</td>
+            <td>跳上睡莲叶歇脚；没有睡莲叶时不跳</td>
+          </tr>
+          <tr>
+            <td class="name">水草</td><td class="num">6</td><td class="num">—</td>
+            <td>产氧</td>
+            <td>—</td>
+            <td>高度、生长速度、叶色每株随机；详见下一节</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <p>「成年」的定义是年龄处于寿命的 <strong>25% 到 80%</strong> 之间：前 25% 是幼体，不能繁殖；超过 80% 是老年，体色变淡也不再繁殖。</p>
+
+    <h3>食物的账算得过来吗</h3>
+    <p>一条鱼从饿到吃饱之间大约要撑 <strong>62 生态秒</strong>（饥饿 1.6 / 秒，满 100）。14 条鱼合起来每分钟吃掉约 13-14 只浮游生物；而水草长满时浮游生物的上限有约 40 只、生成速度约 30 只 / 分钟。所以只要水草长得起来，鱼群能稳定在满员的 14 条。</p>
+    <p>反过来说，<strong>水草没长起来之前是危险的窗口</strong>：产氧低、浮游生物上限也低，鱼可能先因为缺氧浮头，再因为饥饿掉队。这段时间不适合让鱼数字堆到上限。</p>
+
+    <h3>死亡与残骸</h3>
+    <p>任何生物死亡都会留下 1 个残骸（浮游生物除外），残骸进入物质循环：虾吃掉它、或者它污染水质。所以「死了一条鱼」不是一个孤立事件——它同时给了虾一顿饭和一份水质负担。</p>
+
+    <h3>灭绝补救</h3>
+    <p>每次<strong>完成</strong>一个专注（不含跳过），系统会检查并补回已经灭绝的物种：</p>
+    <ul>
+      <li>鱼 0 条 → 迁入 <strong>2 条</strong></li>
+      <li>虾 0 只（已解锁）→ 补 <strong>1 只</strong></li>
+      <li>蝌蚪和青蛙都 0（已解锁）→ 补 <strong>2 只蝌蚪</strong></li>
+      <li>锦鲤 0 条（已解锁）→ 补 <strong>1 条</strong></li>
+    </ul>
+    <p>所以池塘不会永久死掉，但代价是你得先完成一个番茄。这是整套设计里最重要的一条：<strong>专注是复活机制</strong>。</p>
+  </section>
+
+  <!-- ============ 水草 ============ -->
+  <section id="weed">
+    <h2>水草与睡莲</h2>
+    <p class="sub">池塘唯一的结构性资产，也是唯一会「自己变多」的东西。</p>
+
+    <p>初始 6 株，横向位置均布并带随机抖动。每株都有四个独立的随机属性：</p>
+    <div class="table-wrap">
+      <table>
+        <colgroup><col style="width:28%"><col style="width:24%"><col style="width:48%"></colgroup>
+        <thead><tr><th>属性</th><th class="num">范围</th><th>作用</th></tr></thead>
+        <tbody>
+          <tr><td class="name">目标高度 <code>maxFrac</code></td><td class="num">画布高的 35%-85%</td><td>这株最终能长多高，决定它的产氧上限</td></tr>
+          <tr><td class="name">初始高度 <code>hFrac</code></td><td class="num">目标高度的 4%-80%</td><td>刚打开时的样子，每株都不一样</td></tr>
+          <tr><td class="name">生长速度 <code>growRate</code></td><td class="num">0.0009-0.0026 / 生态秒</td><td>快慢差约 3 倍；愈接近目标长得愈慢</td></tr>
+          <tr><td class="name">外观</td><td class="num">—</td><td>叶色、茎粗、叶片间距、摆动频率、倾斜方向各自随机</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <p><code>biomass</code>（生物量）= 当前高度 ÷ 该株目标高度，永远在 0-1 之间。产氧只看它，不看绝对像素：<strong>一株只长到一半的草，产氧只有长满时的一半</strong>。</p>
+    <p>按典型速度，六株从幼苗长到各自的目标高度大约需要 <strong>3-18 分钟专注</strong>（快的五六分钟就定型，慢的要到十七八分钟）。这也是为什么第一个番茄期间池塘看起来一直在变——它在长个子。</p>
+
+    <h3>睡莲叶</h3>
+    <p>当一株水草的 <code>biomass</code> 超过 <strong>0.6</strong>，水草就算「茂盛」。茂盛的株数每两只换一片睡莲叶，场上最多 <strong>4 片</strong>。青蛙会挑一片叶子歇脚、在叶子上产卵。</p>
+    <div class="warn"><b>已知的缺口</b>：睡莲叶只会增加，不会因为水草枯萎而减少——目前水草也只长不枯。所以睡莲叶一旦长满 4 片就不会再变化，这是刻意保留的简化，不是 bug。</div>
+  </section>
+
+  <!-- ============ 解锁与段位 ============ -->
+  <section id="unlock">
+    <h2>解锁与段位</h2>
+    <p class="sub">两套长期目标：一套靠累计专注时长解锁物种，一套靠同一时长往上爬段位。</p>
+
+    <h3>物种解锁</h3>
+    <p>判定依据是<strong>累计真实专注秒数</strong>（<code>totalFocusSec</code>）——不是番茄个数，也不是生态秒。跳过的专注不计入。</p>
+    <div class="table-wrap">
+      <table>
+        <colgroup><col style="width:32%"><col style="width:20%"><col style="width:48%"></colgroup>
+        <thead><tr><th>累计专注达到</th><th class="num">等同于</th><th>发生什么</th></tr></thead>
+        <tbody>
+          <tr><td class="name">虾</td><td class="num">1 小时</td><td>一对虾搬进池底（2 只），开始净化水质、吃残骸</td></tr>
+          <tr><td class="name">蝌蚪与青蛙</td><td class="num">5 小时</td><td>一次投放 3 只蝌蚪，之后靠青蛙自己产卵维持世代</td></tr>
+          <tr><td class="name">锦鲤</td><td class="num">20 小时</td><td>1 条锦鲤游来，长寿、坚韧、不孕</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p>解锁是一次性的：达到阈值立刻投放，之后即使数量归零也不会再触发一次投放，而是走「灭绝补救」的补回逻辑。</p>
+    <p>按 25 分钟一个番茄算：1 小时约 2.4 个番茄（通常第 3 个番茄完成时虾就到了），5 小时约 12 个，20 小时约 48 个。</p>
+
+    <h3>池龄段位</h3>
+    <p>物种全部解锁之后，长期目标换成段位。台阶按累计专注时长划分，界面上永远显示「再专注多久升到下一级」。</p>
+    <div class="ranks">
+      <div><b>泉眼</b><span class="h">0 小时</span></div>
+      <div><b>溪涧</b><span class="h">10 小时</span></div>
+      <div><b>深潭</b><span class="h">50 小时</span></div>
+      <div><b>湖泊</b><span class="h">150 小时</span></div>
+      <div><b>汪洋</b><span class="h">400 小时</span></div>
+    </div>
+    <p>段位与「最长连续天数」并列显示在池塘日记上方。段位只增不减，重置生态不会清掉它。</p>
+  </section>
+
+  <!-- ============ 统计口径 ============ -->
+  <section id="stats">
+    <h2>统计口径</h2>
+    <p class="sub">界面上每个数字分别是什么意思，避免对不上账。</p>
+
+    <div class="table-wrap">
+      <table>
+        <colgroup><col style="width:22%"><col style="width:30%"><col style="width:48%"></colgroup>
+        <thead><tr><th>显示项</th><th>怎么算的</th><th>注意</th></tr></thead>
+        <tbody>
+          <tr><td class="name">累计专注</td><td>所有完成番茄的时长之和</td><td>与物种解锁、段位同一口径；跳过不计</td></tr>
+          <tr><td class="name">今日番茄</td><td>本地日期下已完成的数量</td><td>按标签分别有记录，但面板只显示总数</td></tr>
+          <tr><td class="name">连续天数</td><td>从今天往前数，每天至少完成 1 个番茄</td><td>今天还没完成时算到昨天为止，不会因为「今天还没开始」就断掉</td></tr>
+          <tr><td class="name">最长连续</td><td>历史最高的连续天数</td><td>只记录峰值，不随重置清零</td></tr>
+          <tr><td class="name">生态日</td><td><code>ecoSeconds ÷ 60</code> 取整</td><td>纯展示，不代表任何实际时间</td></tr>
+          <tr><td class="name">生物（只）</td><td>鱼 + 锦鲤 + 虾 + 浮游生物 + 蝌蚪 + 青蛙</td><td><strong>含浮游生物</strong>，所以这个数字里有一大半是小点</td></tr>
+          <tr><td class="name">最高世代</td><td>出现过的最大 <code>gen</code></td><td>鱼、虾、蛙繁殖都会 +1</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <h3>生物多样性</h3>
+    <p>五个类群各占 20 分，按「当前数量 / 目标数量」折算后相加，满分 100：</p>
+    <div class="table-wrap">
+      <table>
+        <colgroup><col style="width:34%"><col style="width:22%"><col style="width:44%"></colgroup>
+        <thead><tr><th>类群</th><th class="num">满分所需</th><th class="num">分值</th></tr></thead>
+        <tbody>
+          <tr><td class="name">浮游生物</td><td class="num">20 只</td><td class="num">20</td></tr>
+          <tr><td class="name">鱼</td><td class="num">6 条</td><td class="num">20</td></tr>
+          <tr><td class="name">虾</td><td class="num">4 只</td><td class="num">20</td></tr>
+          <tr><td class="name">蝌蚪 + 青蛙</td><td class="num">3 只</td><td class="num">20</td></tr>
+          <tr><td class="name">锦鲤</td><td class="num">1 条</td><td class="num">20</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p>所以多样性不是「生物越多越高」，而是「五个类群各有一份」。只有浮游生物和鱼时，多样性最多 40 分。</p>
+  </section>
+
+  <!-- ============ 存档安全 ============ -->
+  <section id="save">
+    <h2>存档与安全</h2>
+    <p class="sub">它存在浏览器里，所以要清楚什么时候会丢。</p>
+
+    <h3>什么时候自动存</h3>
+    <ul>
+      <li>每 <strong>8 秒</strong>存一次（先结算生态时间再写）。</li>
+      <li>页面被切到后台时存一次；关闭页面前再存一次。</li>
+      <li>每次状态切换（开始、暂停、跳过、到点）都会存。</li>
+    </ul>
+
+    <h3>数据在哪</h3>
+    <p>浏览器的本地存储（localStorage），键名 <code>eco-pond-v2</code>，旁边另有 <code>eco-pond-v2.backup</code> 作为重置前的留底。它<strong>绑定在这个浏览器 + 这个文件路径上</strong>：换浏览器、换文件位置、清理浏览器数据，都会看不到旧池塘。</p>
+
+    <h3>三种保护机制</h3>
+    <div class="table-wrap">
+      <table>
+        <colgroup><col style="width:24%"><col style="width:76%"></colgroup>
+        <thead><tr><th>机制</th><th>细节</th></tr></thead>
+        <tbody>
+          <tr><td class="name">坏档自愈</td><td>读档时逐字段校验，任何非法值都退回默认。整个 JSON 解析失败时，把原始内容另存为 <code>.corrupt</code> 后重建池塘，并提示「检测到存档损坏」——不静默死掉</td></tr>
+          <tr><td class="name">导出 / 导入</td><td>「导出存档」下载一个 <code>eco-pond-日期.json</code>；「导入存档」读回同版本（v2）的文件。导入前会先结算当前池塘，再整体替换，并清空旧池塘残留的浮游生物与残骸</td></tr>
+          <tr><td class="name">恢复备份</td><td>重置时旧档自动进备份。有备份时设置行会出现「恢复备份」入口，两段式确认；确认后会把<strong>当前档再存一份为 <code>.preRestore</code></strong>，然后整页重载</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <h3>重置会清掉什么</h3>
+    <div class="table-wrap">
+      <table>
+        <colgroup><col style="width:50%"><col style="width:50%"></colgroup>
+        <thead><tr><th>会清零</th><th>会保留</th></tr></thead>
+        <tbody>
+          <tr>
+            <td>水草、鱼、虾、蝌蚪、青蛙、锦鲤、浮游生物、残骸、睡莲叶<br>氧气（回到 90）、水质（回到 80）、生态日、最高世代、轮次计数</td>
+            <td>累计专注时长、番茄总数、每日历史、最长连续天数、段位<br>已解锁的物种会按阈值重新投放</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+    <p>换句话说：<strong>重置只是换一个池塘，你的成绩和段位不会掉。</strong>想连成绩一起清掉，需要手动清理浏览器存储。</p>
+
+    <div class="note"><b>建议</b>：每隔一周点一次「导出存档」。本地存储不是云备份，浏览器更新、清缓存、磁盘迁移都可能让它消失，而导出的 JSON 是可以带走的唯一副本。</div>
+  </section>
+
+  <!-- ============ 数值速查 ============ -->
+  <section id="table">
+    <h2>数值速查</h2>
+    <p class="sub">全表数值取自代码常量，改代码时请同步这一页。</p>
+
+    <div class="table-wrap">
+      <table>
+        <colgroup><col style="width:26%"><col style="width:28%"><col style="width:46%"></colgroup>
+        <thead><tr><th>项目</th><th class="num">数值</th><th>含义</th></tr></thead>
+        <tbody>
+          <tr><td class="name">专注时长</td><td class="num">5 / 15 / 25 / 45 / 60 分钟</td><td>默认 25</td></tr>
+          <tr><td class="name">短休 / 长休</td><td class="num">3·5·10 / 10·15·20·30</td><td>默认 5 与 15</td></tr>
+          <tr><td class="name">长休周期</td><td class="num">每 4 个番茄</td><td>第 4、8、12……个番茄后</td></tr>
+          <tr class="hi"><td class="name">生态流速</td><td class="num">专注 1.0 / 休息 0.25 / 其余 0</td><td>1 生态秒 ≈ 专注 1 秒 ≈ 休息 4 秒</td></tr>
+          <tr><td class="name">后台补算上限</td><td class="num">1800 生态秒</td><td>分帧消化，每帧最多 300 步</td></tr>
+          <tr><td class="name">生态日</td><td class="num">60 生态秒</td><td>纯展示</td></tr>
+          <tr class="hi"><td class="name">水草产氧</td><td class="num">0.5 / 株（长满）</td><td>6 株长满 = 3.0 / 秒</td></tr>
+          <tr class="hi"><td class="name">专注额外产氧</td><td class="num">+0.3 / 秒</td><td>仅专注中、非暂停</td></tr>
+          <tr class="hi"><td class="name">耗氧</td><td class="num">鱼 0.12 · 锦鲤 0.15 · 虾 0.04 · 蝌蚪 0.03 · 蛙 0.05</td><td>满员无锦鲤合计 2.60</td></tr>
+          <tr><td class="name">氧气 / 水质初值</td><td class="num">90 / 80</td><td>范围均为 0-100</td></tr>
+          <tr><td class="name">低氧阈值</td><td class="num">40 / 20 / 8</td><td>浮头 / 饥饿加速 / 开始死亡（0.003 每秒）</td></tr>
+          <tr><td class="name">水质公式</td><td class="num">+0.25 + 虾×0.05 − 残骸×0.08</td><td>每秒；残骸上限 30</td></tr>
+          <tr><td class="name">水质阈值</td><td class="num">40 / 30</td><td>水体泛黄 / 浮游生物上限减半</td></tr>
+          <tr><td class="name">照料池塘</td><td class="num">氧 +10 · 水 +12 · 打捞 30%</td><td>冷却 90 秒</td></tr>
+          <tr><td class="name">数量上限</td><td class="num">鱼 14 · 锦鲤 3 · 虾 8 · 蝌蚪 10 · 蛙 6 · 睡莲 4</td><td>满了就不再新增</td></tr>
+          <tr><td class="name">浮游生物上限</td><td class="num">16 + 平均水草生物量×24</td><td>满草约 40；水质低于 30 时减半</td></tr>
+          <tr><td class="name">浮游生成速率</td><td class="num">0.5 / 生态秒</td><td>未到上限时</td></tr>
+          <tr><td class="name">饥饿速度</td><td class="num">鱼 1.6（低氧 2.4） · 虾 1.2</td><td>满 100 死亡</td></tr>
+          <tr><td class="name">繁殖冷却</td><td class="num">鱼 80-140 · 虾 100-160 · 蛙 200-300</td><td>蛙每窝 2-4 只</td></tr>
+          <tr><td class="name">蝌蚪变态</td><td class="num">120-180 生态秒</td><td>青蛙满 6 只时排队</td></tr>
+          <tr><td class="name">寿命</td><td class="num">鱼 600-1000 · 锦鲤 1500-2400 · 虾 500-800 · 蝌蚪 700-1100 · 蛙 800-1200 · 浮游 200-400</td><td>单位为生态秒</td></tr>
+          <tr><td class="name">成年区间</td><td class="num">寿命的 25%-80%</td><td>只有这一段能繁殖</td></tr>
+          <tr><td class="name">物种解锁</td><td class="num">3600 / 18000 / 72000 秒</td><td>1h 虾 · 5h 蝌蚪与蛙 · 20h 锦鲤</td></tr>
+          <tr><td class="name">段位台阶</td><td class="num">0 / 10h / 50h / 150h / 400h</td><td>泉眼 · 溪涧 · 深潭 · 湖泊 · 汪洋</td></tr>
+          <tr><td class="name">自动存档</td><td class="num">每 8 秒</td><td>另有切换、隐藏、离开前各一次</td></tr>
+          <tr><td class="name">两段确认窗口</td><td class="num">3 秒</td><td>重置、恢复备份</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- ============ 常见疑问 ============ -->
+  <section id="faq">
+    <h2>常见疑问</h2>
+    <p class="sub">大多数「是不是坏了」都能在这几条里对上原因。</p>
+
+    <h4>氧气一直停在 90 上下，是不是产氧不够？</h4>
+    <p>先看有没有满员。满员专注时净收入只有 +0.7 / 秒，从 90 涨到 100 需要约 14 个生态秒——但氧气一旦到 100 就不再涨，所以看上去「停在顶部」。真正要看的是它有没有在掉，而不是有没有在涨。</p>
+
+    <h4>鱼在减少，但我没看到死亡？</h4>
+    <p>死亡一定会写进池塘日记，只是日记只保留最近 10 条，缺氧集中死亡时会被后面的条目刷掉。核对顺序：氧气是否低于 8（翻白）、饥饿是否满 100（饿死，通常意味着浮游生物不足或水质低于 30）、或者只是年龄到寿（年龄到 80% 后体色变淡，接下来会自然死亡）。</p>
+
+    <h4>虾越来越少</h4>
+    <p>虾只吃残骸。池塘很干净、长时间没有生物死亡时，虾会在约 83 生态秒后饿死。日记会写「池底太干净了」。这时候减少「照料池塘」的次数，或者接受虾的数量自然回落——它本来就是这个生态里的清道夫，不是永动机。</p>
+
+    <h4>最小化 25 分钟回来，池塘几乎没变？</h4>
+    <p>先确认这三个前提：计时确实在走（不是暂停）、没有被跳过、阶段没有切换到待机（待机时生态流速为 0）。如果都没问题，检查是否弹过「后台补算已达 30 分钟上限」——单次补算最多 1800 生态秒。</p>
+
+    <h4>换了一台电脑，池塘没了</h4>
+    <p>存档在浏览器本地，不会跟着你走。正确做法：在旧机上导出 JSON，在新机上先打开页面，再点「导入存档」。导入是同版本（v2）格式，其他版本会被拒绝。</p>
+
+    <h4>刷新会不会毁掉正在进行的专注？</h4>
+    <p>不会。计时基于结束时间戳，刷新后按剩余时间续跑；如果刷新期间已经过点，会补记一个番茄并自动进入休息。这一点和池塘不同：池塘在页面关闭期间是冻结的。</p>
+
+    <h4>水草长得比想象中慢</h4>
+    <p>六株的成长速度各不相同，快的在 5 分钟内定型，慢的要到十七八分钟。这是为了让它看起来像活的东西——如果一节课就全部插满，后面的观察就没有变化了。想调快，改 <code>growRate</code> 的范围即可。</p>
+
+    <h4>桌面通知没弹出来</h4>
+    <p>两种情况：一是之前拒绝过权限（设置行会有提示，去浏览器站点设置里重新允许）；二是用 <code>file://</code> 直接打开，部分浏览器不允许本地页面发系统通知。此时以页面内的计时与提示音为准，功能不受影响。</p>
+  </section>
+
+  <footer>
+    <p>本页对应「生态番茄钟」v2 单文件版的实现。所有数值均为代码中的实际常量与公式，未经取整美化；若修改了代码里的 <code>CONFIG</code> 或某个物种的参数，请同步更新这一页，否则它会变成一份过期的说明书。</p>
+    <p>整理于 2026 年 11 月 · 与 <code>index.html</code> 放在同一目录，可单独打开或随文件一起分发。</p>
+  </footer>
+
+</div>
+</body>
+</html>
