@@ -166,7 +166,7 @@
     display: flex; justify-content: center; gap: 8px; flex-wrap: wrap;
     font-size: 12px; color: var(--text-dim); align-items: center;
   }
-  .dur-row select {
+  .dur-row select, .set-row select {
     font: inherit; font-size: 12px; color: var(--text);
     background: var(--ink-2); border: 1px solid var(--line);
     border-radius: 8px; padding: 4px 6px;
@@ -243,8 +243,8 @@
 <body>
 
 <header>
-  <h1>生态番茄钟 · <em>池塘</em></h1>
-  <p>你专注的每一秒，都是池塘里的一天</p>
+  <h1><span data-i18n="appTitlePre">生态番茄钟 · </span><em data-i18n="appTitleEm">池塘</em></h1>
+  <p data-i18n="appTagline">你专注的每一秒，都是池塘里的一天</p>
 </header>
 
 <main>
@@ -255,28 +255,28 @@
       <div class="pond-badge" id="pondBadge" data-state="idle">待 机</div>
     </div>
 
-    <div class="vitals" aria-label="池塘体征">
-      <h2>池 塘 体 征</h2>
+    <div class="vitals" data-i18n-aria="vitalsAria" aria-label="池塘体征">
+      <h2 data-i18n="vitalsTitle">池 塘 体 征</h2>
       <div class="vital-row">
-        <label for="vOxygen">氧气</label>
+        <label for="vOxygen" data-i18n="oxygen">氧气</label>
         <div class="vital-track"><div class="vital-fill good" id="vOxygen"></div></div>
         <output id="vOxygenVal">--</output>
       </div>
       <div class="vital-row">
-        <label for="vQuality">水质</label>
+        <label for="vQuality" data-i18n="quality">水质</label>
         <div class="vital-track"><div class="vital-fill good" id="vQuality"></div></div>
         <output id="vQualityVal">--</output>
       </div>
       <div class="vital-row">
-        <label for="vBio">多样性</label>
+        <label for="vBio" data-i18n="bio">多样性</label>
         <div class="vital-track"><div class="vital-fill good" id="vBio"></div></div>
         <output id="vBioVal">--</output>
       </div>
-      <button class="care-btn" id="btnCare">照料池塘</button>
+      <button class="care-btn" id="btnCare" data-i18n="careBtn">照料池塘</button>
     </div>
 
-    <div class="species" aria-label="物种图鉴">
-      <h2>物 种 图 鉴</h2>
+    <div class="species" data-i18n-aria="speciesAria" aria-label="物种图鉴">
+      <h2 data-i18n="speciesTitle">物 种 图 鉴</h2>
       <ul id="speciesList"></ul>
     </div>
   </section>
@@ -291,24 +291,25 @@
     </div>
 
     <div class="task-row">
-      <input id="taskInput" type="text" maxlength="24" placeholder="这次专注做什么？（可选）" aria-label="任务名称">
-      <select id="tagSelect" aria-label="任务标签">
-        <option value="学习">学习</option>
-        <option value="工作">工作</option>
-        <option value="阅读">阅读</option>
-        <option value="创作">创作</option>
-        <option value="其他">其他</option>
+      <input id="taskInput" type="text" maxlength="24" data-i18n-ph="taskPh" placeholder="这次专注做什么？（可选）" data-i18n-aria="taskAria" aria-label="任务名称">
+      <!-- 选项值是稳定键名（写入存档），显示名由 applyLang 按当前语言刷新 -->
+      <select id="tagSelect" data-i18n-aria="tagAria" aria-label="任务标签">
+        <option value="study">学习</option>
+        <option value="work">工作</option>
+        <option value="read">阅读</option>
+        <option value="create">创作</option>
+        <option value="other">其他</option>
       </select>
     </div>
 
     <div class="btn-row">
       <button class="primary" id="btnStart">开始专注</button>
       <button id="btnPause" disabled>暂停</button>
-      <button id="btnSkip" disabled>跳过</button>
+      <button id="btnSkip" data-i18n="btnSkip" disabled>跳过</button>
     </div>
 
     <div class="dur-row">
-      专注
+      <span data-i18n="durFocus">专注</span>
       <select id="selFocus">
         <option value="5">5 分钟</option>
         <option value="15">15 分钟</option>
@@ -316,13 +317,13 @@
         <option value="45">45 分钟</option>
         <option value="60">60 分钟</option>
       </select>
-      短休
+      <span data-i18n="durBreak">短休</span>
       <select id="selBreak">
         <option value="3">3 分钟</option>
         <option value="5" selected>5 分钟</option>
         <option value="10">10 分钟</option>
       </select>
-      长休
+      <span data-i18n="durLong">长休</span>
       <select id="selLong">
         <option value="10">10 分钟</option>
         <option value="15" selected>15 分钟</option>
@@ -332,47 +333,53 @@
     </div>
 
     <div class="set-row">
-      <label><input type="checkbox" id="chkMute"> 静音</label>
+      <span data-i18n="langLabel">语言</span>
+      <select id="selLang" aria-label="Language">
+        <option value="en" selected>English</option>
+        <option value="zh">中文</option>
+      </select>
       <span class="sep">·</span>
-      <label><input type="checkbox" id="chkNotify" checked> 系统通知</label>
+      <label><input type="checkbox" id="chkMute"><span data-i18n="mute"> 静音</span></label>
       <span class="sep">·</span>
-      <button id="btnExport">导出存档</button>
+      <label><input type="checkbox" id="chkNotify" checked><span data-i18n="notify"> 系统通知</span></label>
       <span class="sep">·</span>
-      <button id="btnImport">导入存档</button>
+      <button id="btnExport" data-i18n="export">导出存档</button>
+      <span class="sep">·</span>
+      <button id="btnImport" data-i18n="import">导入存档</button>
       <input type="file" id="fileImport" accept=".json,application/json" hidden>
       <span class="sep">·</span>
-      <button id="btnRestore" hidden>恢复备份</button>
+      <button id="btnRestore" hidden data-i18n="restore">恢复备份</button>
       <span id="notifyHint" class="notify-hint"></span>
     </div>
 
     <div class="stats">
-      <div class="stat"><b id="statFocus">0min</b><span>累计专注</span></div>
-      <div class="stat"><b id="statToday">0</b><span>今日番茄</span></div>
-      <div class="stat"><b id="statStreak">0</b><span>连续天数</span></div>
-      <div class="stat"><b id="statEco">0</b><span>生态日</span></div>
-      <div class="stat"><b id="statFish">0</b><span>生物(只)</span></div>
-      <div class="stat"><b id="statGen">1</b><span>最高世代</span></div>
+      <div class="stat"><b id="statFocus">0min</b><span data-i18n="statFocusL">累计专注</span></div>
+      <div class="stat"><b id="statToday">0</b><span data-i18n="statTodayL">今日番茄</span></div>
+      <div class="stat"><b id="statStreak">0</b><span data-i18n="statStreakL">连续天数</span></div>
+      <div class="stat"><b id="statEco">0</b><span data-i18n="statEcoL">生态日</span></div>
+      <div class="stat"><b id="statFish">0</b><span data-i18n="statFishL">生物(只)</span></div>
+      <div class="stat"><b id="statGen">1</b><span data-i18n="statGenL">最高世代</span></div>
     </div>
 
-    <div class="rank-row" title="长期目标：段位由累计专注时长决定">
+    <div class="rank-row" data-i18n-title="rankTitle" title="长期目标：段位由累计专注时长决定">
       <span class="rank-name" id="rankName">泉眼</span>
       <div class="rank-track"><div class="rank-fill" id="rankFill"></div></div>
       <span class="rank-next" id="rankNext"></span>
     </div>
-    <div class="rank-sub">最长连续 <b id="statBest">0</b> 天 · 物种全解锁后，向更高段位进发</div>
+    <div class="rank-sub"><span data-i18n="bestStreakPre">最长连续 </span><b id="statBest">0</b><span data-i18n="bestStreakPost"> 天 · 物种全解锁后，向更高段位进发</span></div>
 
     <div class="diary">
-      <h2>池 塘 日 记</h2>
+      <h2 data-i18n="diaryTitle">池 塘 日 记</h2>
       <ul id="diaryList" aria-live="polite"></ul>
     </div>
 
     <div class="btn-row">
-      <button class="ghost-danger" id="btnReset">重置生态</button>
+      <button class="ghost-danger" id="btnReset" data-i18n="btnReset">重置生态</button>
     </div>
   </aside>
 </main>
 
-<footer>空格键 开始 / 暂停 · 本地自动存档 · 离开期间生态最多补算 30 分钟</footer>
+<footer data-i18n="footer">空格键 开始 / 暂停 · 本地自动存档 · 离开期间生态最多补算 30 分钟</footer>
 <div id="toast" role="status"></div>
 <span class="sr-only" id="srTimer" aria-live="polite"></span>
 
@@ -415,6 +422,208 @@ const CONFIG = {
                              // 专注期再 +0.3 → 3.3，明显回氧。过密（含锦鲤满员 3.05）才缓慢下降
 };
 
+/* ============================================================
+ * 多语言（i18n）：默认英文，可切换中文
+ *   - 静态文案：HTML 里用 data-i18n / -ph / -aria / -title 标记，applyLang() 批量刷新
+ *   - 动态消息（日记/toast/通知）：只存翻译键 + 参数，渲染时按当前语言生成，
+ *     这样切换语言时连最近的日记都能整体重渲染
+ *   - 标签（学习/工作…）的存档值是稳定键名（study/work…），显示名才翻译
+ * ============================================================ */
+let LANG = 'en'; // 'en' | 'zh'
+const I18N = {
+  en: {
+    titleIdle: 'Eco Pomodoro · Pond', titleBase: 'Eco Pomodoro',
+    appTitlePre: 'Eco Pomodoro ', appTitleEm: 'Pond',
+    appTagline: 'Every second you focus is a day in the pond',
+    badgeIdle: 'IDLE', badgeFocus: 'FOCUS', badgeBreak: 'BREAK', badgeLong: 'LONG BREAK',
+    vitalsAria: 'Pond vitals', vitalsTitle: 'POND VITALS',
+    oxygen: 'Oxygen', quality: 'Water quality', bio: 'Diversity',
+    careBtn: 'Tend the pond',
+    speciesAria: 'Species guide', speciesTitle: 'SPECIES GUIDE',
+    taskPh: 'What are you focusing on? (optional)',
+    taskAria: 'Task name', tagAria: 'Task tag',
+    tag_study: 'Study', tag_work: 'Work', tag_read: 'Reading', tag_create: 'Creating', tag_other: 'Other',
+    btnStart: 'Start focus', btnFocusing: 'Focusing…', btnResting: 'On break…',
+    btnPause: 'Pause', btnResume: 'Resume', btnSkip: 'Skip',
+    durFocus: 'Focus', durBreak: 'Short break', durLong: 'Long break', unitMin: 'min',
+    langLabel: 'Language',
+    mute: 'Mute', notify: 'Notifications',
+    export: 'Export', import: 'Import', restore: 'Restore backup',
+    notifyDenied: 'System notifications unavailable — in-page alerts only',
+    notifyDefault: 'Not authorized yet — permission is requested when you press Start',
+    statFocusL: 'TOTAL FOCUS', statTodayL: 'TODAY', statStreakL: 'STREAK',
+    statEcoL: 'ECO DAYS', statFishL: 'CREATURES', statGenL: 'MAX GEN',
+    rankTitle: 'Long-term goal: rank grows with total focus time',
+    rankNext: '{0} to “{1}”', rankMax: 'Top rank',
+    bestStreakPre: 'Best streak ', bestStreakPost: ' days · beyond species, climb the ranks',
+    diaryTitle: 'POND DIARY',
+    btnReset: 'Reset ecosystem',
+    resetArmed: 'Tap again to confirm reset', restoreArmed: 'Tap again to confirm restore',
+    footer: 'Space: start / pause · Auto-saved locally · Away time counts up to 30 min',
+    srRemain: 'About {0} minutes left',
+    subIdleFirst: 'Press “Start focus” to wake the pond',
+    subIdle: 'The pond is asleep, waiting for your next focus',
+    subPaused: 'Paused — pond time is frozen',
+    subFocusTask: 'Focusing · {0} · {1}', subFocusNoTask: 'Focusing · {0} · eco time ×1',
+    subBreak: 'Eco time flowing slowly ×0.25',
+    subLong: 'Long break every {0} pomodoros',
+    rank_0: 'Spring', rank_1: 'Brook', rank_2: 'Pool', rank_3: 'Lake', rank_4: 'Ocean',
+    sp_plankton: 'Plankton', sp_fish: 'Fish', sp_shrimp: 'Shrimp', sp_frog: 'Frogs', sp_koi: 'Koi',
+    speciesCount: '{0}', lockedName: '???', unlockHint: 'Focus {0} more to unlock',
+    notifyFocusTitle: 'Focus complete',
+    notifyFocusBody1: '“{0}” is done — take a break', notifyFocusBody2: 'One pomodoro done — take a break',
+    notifyBreakTitle: 'Break over', notifyBreakBody: 'The pond awaits — start your next focus',
+    startFocus: 'Focus started — sunlight pours into the pond',
+    startLong: 'Four pomodoros complete — enjoy a long break',
+    startBreak: 'A short break — the pond drifts into moonlight',
+    focusDone: 'Pomodoro #{0} done — the pond grows livelier',
+    skipFocus: 'Focus skipped',
+    breakLongDone: 'Long break over — fully recharged',
+    breakSkip: 'Break ended early', breakDone: 'Break over — ready to focus again',
+    fishStarve: 'A fish starved — not enough plankton',
+    fishHypoxia: 'Oxygen ran out — a fish didn’t make it',
+    fishBorn: 'Generation {0} fish hatched',
+    shrimpStarve: 'A shrimp starved — the floor is too clean',
+    shrimpBorn: 'Generation {0} shrimp settled on the floor',
+    tadpoleMature: 'A tadpole became a frog and hopped onto a lily pad',
+    frogEggs: 'Frogs laid {0} eggs — generation {1} tadpoles hatched',
+    endangered: 'Only one {0} left — the population is endangered!',
+    fishReturn: 'A pair of fish followed your ripples and moved in',
+    shrimpReturn: 'A shrimp moved back onto the floor',
+    eggsReturn: 'A new clutch of frog eggs appeared',
+    koiReturn: 'The koi returned along the ripples',
+    careCooldown: 'Just tended — try again in {0}s',
+    careDone: 'You scooped debris and added fresh water — the pond brightened',
+    unlockShrimpLog: 'One hour of focus — a pair of shrimp moved in',
+    unlockShrimpToast: 'New species: Shrimp',
+    unlockTadLog: 'Five hours of focus — tadpoles appeared',
+    unlockTadToast: 'New species: Tadpoles & Frogs',
+    unlockKoiLog: 'Twenty hours of dedication — a koi glides in',
+    unlockKoiToast: 'New species: Koi',
+    saveFail: 'Save failed (storage full?) — this progress may be lost',
+    corruptToast: 'Corrupted save detected — backed up and pond rebuilt',
+    pausedRestore: 'Previous timer was paused — resume anytime',
+    welcomeBack: 'Welcome back — the timer is still running',
+    creditWhileAway: 'You finished a focus while away — it’s been counted',
+    breakAway: 'The break ended while you were away',
+    v1Migrate: 'Old pond archive migrated to this version',
+    resetKept: 'The pond is reborn — your focus remains, familiar species return',
+    resetNew: 'The pond is reborn — plankton and little fish to start',
+    resetToast: 'Ecosystem reset (previous pond backed up — restorable)',
+    exportToast: 'Save exported', exportFail: 'Export failed',
+    importToast: 'Save imported', importLog: 'A pond archive was imported — fresh waters',
+    importFail: 'Import failed: not a valid pond save', importReadFail: 'Import failed: file read error',
+    noBackup: 'No backup available', restoreFail: 'Restore failed',
+    durChange: 'New duration takes effect next phase',
+    welcomeIdle: 'Welcome back — the pond is as you left it',
+    newPond: 'A new pond is born, seeded with plankton and little fish',
+    settleCapToast: 'Catch-up reached the 30-minute cap',
+    settleCapLog: 'Away too long — catch-up capped at 30 minutes',
+    settleAway: 'You were away — the pond drifted by {0} eco-seconds',
+    durMin: '{0}min', durH: '{0}h{1}m',
+  },
+  zh: {
+    titleIdle: '生态番茄钟 · 池塘', titleBase: '生态番茄钟',
+    appTitlePre: '生态番茄钟 · ', appTitleEm: '池塘',
+    appTagline: '你专注的每一秒，都是池塘里的一天',
+    badgeIdle: '待 机', badgeFocus: '专 注 中', badgeBreak: '休 息 中', badgeLong: '长 休 息',
+    vitalsAria: '池塘体征', vitalsTitle: '池 塘 体 征',
+    oxygen: '氧气', quality: '水质', bio: '多样性',
+    careBtn: '照料池塘',
+    speciesAria: '物种图鉴', speciesTitle: '物 种 图 鉴',
+    taskPh: '这次专注做什么？（可选）',
+    taskAria: '任务名称', tagAria: '任务标签',
+    tag_study: '学习', tag_work: '工作', tag_read: '阅读', tag_create: '创作', tag_other: '其他',
+    btnStart: '开始专注', btnFocusing: '专注中…', btnResting: '休息中…',
+    btnPause: '暂停', btnResume: '继续', btnSkip: '跳过',
+    durFocus: '专注', durBreak: '短休', durLong: '长休', unitMin: '分钟',
+    langLabel: '语言',
+    mute: '静音', notify: '系统通知',
+    export: '导出存档', import: '导入存档', restore: '恢复备份',
+    notifyDenied: '系统通知不可用，仅页面内提示',
+    notifyDefault: '尚未授权，点开始专注时会请求',
+    statFocusL: '累计专注', statTodayL: '今日番茄', statStreakL: '连续天数',
+    statEcoL: '生态日', statFishL: '生物(只)', statGenL: '最高世代',
+    rankTitle: '长期目标：段位由累计专注时长决定',
+    rankNext: '再专注 {0} 升至「{1}」', rankMax: '最高段位',
+    bestStreakPre: '最长连续 ', bestStreakPost: ' 天 · 物种全解锁后，向更高段位进发',
+    diaryTitle: '池 塘 日 记',
+    btnReset: '重置生态',
+    resetArmed: '再点一次确认重置', restoreArmed: '再点一次确认恢复',
+    footer: '空格键 开始 / 暂停 · 本地自动存档 · 离开期间生态最多补算 30 分钟',
+    srRemain: '剩余约 {0} 分钟',
+    subIdleFirst: '按下「开始专注」，唤醒池塘',
+    subIdle: '池塘睡着了，等待下一次专注',
+    subPaused: '已暂停，池塘时间凝固了',
+    subFocusTask: '专注中 · {0} · {1}', subFocusNoTask: '专注中 · {0} · 生态时间 ×1',
+    subBreak: '生态时间慢速流动 ×0.25',
+    subLong: '每 {0} 个番茄一次长休息',
+    rank_0: '泉眼', rank_1: '溪涧', rank_2: '深潭', rank_3: '湖泊', rank_4: '汪洋',
+    sp_plankton: '浮游生物', sp_fish: '小鱼', sp_shrimp: '虾', sp_frog: '青蛙', sp_koi: '锦鲤',
+    speciesCount: '{0} 只', lockedName: '？？？', unlockHint: '再专注 {0} 解锁',
+    notifyFocusTitle: '专注完成',
+    notifyFocusBody1: '「{0}」完成了，休息一下吧', notifyFocusBody2: '完成一个番茄，休息一下吧',
+    notifyBreakTitle: '休息结束', notifyBreakBody: '池塘在等你，开始下一个专注吧',
+    startFocus: '开始专注，阳光照进池塘',
+    startLong: '完成一轮四个番茄，进入长休息',
+    startBreak: '休息片刻，池塘进入月夜',
+    focusDone: '第 {0} 个番茄完成，池塘又热闹了一些',
+    skipFocus: '跳过了这次专注',
+    breakLongDone: '长休息结束，精神饱满了',
+    breakSkip: '提前结束休息', breakDone: '休息结束，可以继续专注了',
+    fishStarve: '一条鱼饿死了——浮游生物不够吃',
+    fishHypoxia: '氧气耗尽，一条鱼没能撑过去',
+    fishBorn: '第 {0} 代小鱼出生了',
+    shrimpStarve: '一只虾饿死了——池底太干净了',
+    shrimpBorn: '第 {0} 代小虾在池底安家',
+    tadpoleMature: '一只蝌蚪长成了青蛙，跳上了睡莲叶',
+    frogEggs: '青蛙产下 {0} 枚卵，第 {1} 代蝌蚪孵化',
+    endangered: '{0}只剩最后一只了，种群濒危！',
+    fishReturn: '一对小鱼循着专注的涟漪迁居而来',
+    shrimpReturn: '一只虾重新搬进了池底',
+    eggsReturn: '水面又出现了一窝蛙卵',
+    koiReturn: '锦鲤循着涟漪又回到了池塘',
+    careCooldown: '池塘刚被照料过，{0} 秒后再来',
+    careDone: '你打捞了残渣、注入新水，池塘清亮了一些',
+    unlockShrimpLog: '坚持专注一小时，一对虾搬进了池底',
+    unlockShrimpToast: '解锁新物种：虾',
+    unlockTadLog: '累计五小时专注，蝌蚪出现了',
+    unlockTadToast: '解锁新物种：蝌蚪与青蛙',
+    unlockKoiLog: '二十小时的沉淀，一条锦鲤悄然游来',
+    unlockKoiToast: '解锁新物种：锦鲤',
+    saveFail: '存档写入失败（存储空间不足？），本次进度可能丢失',
+    corruptToast: '检测到存档损坏，已自动备份并重建池塘',
+    pausedRestore: '上次的计时已暂停，随时可以继续',
+    welcomeBack: '欢迎回来，计时还在继续',
+    creditWhileAway: '你离开时完成了一次专注，已为你记上',
+    breakAway: '休息在你离开时已结束',
+    v1Migrate: '旧池塘的档案已迁移到新版本',
+    resetKept: '池塘重生了，你的专注积累还在，老物种们悉数回归',
+    resetNew: '池塘重生了，一切从浮游生物和小鱼开始',
+    resetToast: '生态已重置（重置前的池塘已备份，可恢复）',
+    exportToast: '存档已导出', exportFail: '导出失败',
+    importToast: '存档已导入', importLog: '导入了一份池塘档案，水体焕然一新',
+    importFail: '导入失败：不是有效的池塘存档文件', importReadFail: '导入失败：文件读取错误',
+    noBackup: '没有可用的备份', restoreFail: '恢复失败',
+    durChange: '新时长将在下一阶段生效',
+    welcomeIdle: '欢迎回来，池塘还是你离开时的样子',
+    newPond: '一方新池塘诞生了，撒下了浮游生物和几条小鱼',
+    settleCapToast: '后台补算已达 30 分钟上限',
+    settleCapLog: '离开太久了，生态补算按 30 分钟封顶',
+    settleAway: '你离开了一阵，池塘悄悄流逝了 {0} 生态秒',
+    durMin: '{0}分钟', durH: '{0}小时{1}分',
+  },
+};
+// 取译文：{n} 占位符按参数序号替换；键缺失时回退英文，再回退键名本身
+const t = (k, ...p) => {
+  const s = (I18N[LANG] && I18N[LANG][k]) ?? I18N.en[k] ?? k;
+  return s.replace(/\{(\d+)\}/g, (_, i) => (p[+i] ?? ''));
+};
+// 标签键 → 显示名（旧档可能存中文名，找不到键时原样显示）
+const tagName = k => (I18N[LANG]['tag_' + k] ? t('tag_' + k) : k);
+// 旧版存档里的中文标签值 → 规范键名
+const TAG_KEYS = { '学习': 'study', '工作': 'work', '阅读': 'read', '创作': 'create', '其他': 'other' };
+
 // ---------- 小工具 ----------
 const rand = (a, b) => a + Math.random() * (b - a);
 const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
@@ -430,12 +639,12 @@ const fmt = ms => { // mm:ss
   const s = Math.ceil(ms / 1000);
   return `${String(Math.floor(s / 60)).padStart(2, '0')}:${String(s % 60).padStart(2, '0')}`;
 };
-function fmtDur(sec) { // 时长显示：修正分钟进位（59.7min 会显示 60min 的 bug）
+function fmtDur(sec) { // 时长显示：修正分钟进位（59.7min 会显示 60min 的 bug）；单位随语言
   sec = Math.round(sec);
   let h = Math.floor(sec / 3600);
   let m = Math.round((sec - h * 3600) / 60);
   if (m === 60) { h += 1; m = 0; }
-  return h ? `${h}h${String(m).padStart(2, '0')}m` : `${m}min`;
+  return h ? t('durH', h, String(m).padStart(2, '0')) : t('durMin', m);
 }
 const dateKey = (d = new Date()) => d.toLocaleDateString('sv'); // 本地 YYYY-MM-DD
 
@@ -453,7 +662,7 @@ const els = {
   statEco: $('statEco'), statFish: $('statFish'), statGen: $('statGen'),
   selFocus: $('selFocus'), selBreak: $('selBreak'), selLong: $('selLong'),
   taskInput: $('taskInput'), tagSelect: $('tagSelect'),
-  chkMute: $('chkMute'), chkNotify: $('chkNotify'),
+  chkMute: $('chkMute'), chkNotify: $('chkNotify'), selLang: $('selLang'),
   vOxygen: $('vOxygen'), vQuality: $('vQuality'), vBio: $('vBio'),
   vOxygenVal: $('vOxygenVal'), vQualityVal: $('vQualityVal'), vBioVal: $('vBioVal'),
   speciesList: $('speciesList'), diaryList: $('diaryList'),
@@ -511,9 +720,9 @@ function ensureNotifyPermission() {
 function updateNotifyHint() {
   if (!pond.settings.notify) { els.notifyHint.textContent = ''; return; }
   if (!('Notification' in window) || Notification.permission === 'denied') {
-    els.notifyHint.textContent = '系统通知不可用，仅页面内提示';
+    els.notifyHint.textContent = t('notifyDenied');
   } else if (Notification.permission === 'default') {
-    els.notifyHint.textContent = '尚未授权，点开始专注时会请求';
+    els.notifyHint.textContent = t('notifyDefault');
   } else {
     els.notifyHint.textContent = '';
   }
@@ -545,10 +754,10 @@ function settleEcoTime(until) {
   pond.pendingEco += Math.min(added, room);
   if (added > room && Date.now() - (pond._capToastAt || 0) > 60000) {
     pond._capToastAt = Date.now();
-    toast('后台补算已达 30 分钟上限');
-    pond.log('离开太久了，生态补算按 30 分钟封顶', true);
+    toast(t('settleCapToast'));
+    pond.log('settleCapLog', [], true);
   }
-  if (added >= 60) pond.log(`你离开了一阵，池塘悄悄流逝了 ${Math.round(added)} 生态秒`);
+  if (added >= 60) pond.log('settleAway', [Math.round(added)]);
 }
 
 const pomo = {
@@ -559,7 +768,7 @@ const pomo = {
   totalMs: 0,           // 当前阶段总时长（算进度条用）
   cycle: 0,             // 本轮已连续完成的番茄数（决定长休息）
   task: '',             // 任务名
-  tag: '学习',          // 任务标签
+  tag: 'study',         // 任务标签（存键名，显示时按语言翻译）
 
   focusMin() { return +els.selFocus.value; },
   breakMin() { return +els.selBreak.value; },
@@ -577,9 +786,9 @@ const pomo = {
     if (state === 'focus') {
       this.task = els.taskInput.value.trim();
       this.tag = els.tagSelect.value;
-      pond.log('开始专注，阳光照进池塘');
+      pond.log('startFocus');
     } else {
-      pond.log(state === 'longBreak' ? '完成一轮四个番茄，进入长休息' : '休息片刻，池塘进入月夜');
+      pond.log(state === 'longBreak' ? 'startLong' : 'startBreak');
     }
     syncUI();
     pond.save();
@@ -613,22 +822,22 @@ const pomo = {
     if (kind === 'focus') {
       if (!skipped) {
         this.creditFocus(this.totalMs);          // 记账：番茄数、历史、专注时长
-        pond.log(`第 ${pond.sessions} 个番茄完成，池塘又热闹了一些`);
+        pond.log('focusDone', [pond.sessions]);
         chime(880);
-        notify('专注完成', this.task ? `「${this.task}」完成了，休息一下吧` : '完成一个番茄，休息一下吧');
+        notify(t('notifyFocusTitle'), this.task ? t('notifyFocusBody1', this.task) : t('notifyFocusBody2'));
         pond.repopulate();                        // 灭绝不是终点：专注唤回生命
         this.start(this.cycle % CONFIG.longBreakEvery === 0 ? 'longBreak' : 'break');
         return;
       }
-      pond.log('跳过了这次专注');
+      pond.log('skipFocus');
       this.state = 'idle';
     } else {
       if (!skipped) {
         chime(660);
-        notify('休息结束', '池塘在等你，开始下一个专注吧');
+        notify(t('notifyBreakTitle'), t('notifyBreakBody'));
       }
-      pond.log(kind === 'longBreak' ? '长休息结束，精神饱满了'
-        : skipped ? '提前结束休息' : '休息结束，可以继续专注了');
+      pond.log(kind === 'longBreak' ? 'breakLongDone'
+        : skipped ? 'breakSkip' : 'breakDone');
       this.state = 'idle';
     }
     this.paused = false;
@@ -833,10 +1042,10 @@ class Fish extends Creature {
     this.growOld(dtEco);
     const hungerRate = pond.oxygen < 20 ? 2.4 : 1.6; // 低氧时消耗加快
     this.hunger = clamp(this.hunger + dtEco * hungerRate, 0, 100);
-    if (this.hunger >= 100 && !this.hardy) { this.dead = true; pond.log('一条鱼饿死了——浮游生物不够吃', true); }
+    if (this.hunger >= 100 && !this.hardy) { this.dead = true; pond.log('fishStarve', [], true); }
     // 极低氧才有低概率死亡， hardy 物种免疫
     if (!this.dead && !this.hardy && pond.oxygen < 8 && Math.random() < dtEco * 0.003) {
-      this.dead = true; pond.log('氧气耗尽，一条鱼没能撑过去', true);
+      this.dead = true; pond.log('fishHypoxia', [], true);
     }
 
     if (this.size < this.maxSize) this.size += dtEco * 0.05;
@@ -851,7 +1060,7 @@ class Fish extends Creature {
       pond.fish.push(baby);
       pond.maxGen = Math.max(pond.maxGen, baby.gen);
       pond.ripple(this.x, this.y, 14);
-      pond.log(`第 ${baby.gen} 代小鱼出生了`);
+      pond.log('fishBorn', [baby.gen]);
     }
   }
   draw() {
@@ -939,7 +1148,7 @@ class Shrimp extends Creature {
         break;
       }
     }
-    if (this.hunger >= 100) { this.dead = true; pond.log('一只虾饿死了——池底太干净了', true); }
+    if (this.hunger >= 100) { this.dead = true; pond.log('shrimpStarve', [], true); }
     this.breedCd -= dtEco;
     if (this.lifeStage === 1 && this.hunger < 40 && this.breedCd <= 0
         && pond.shrimp.length < CONFIG.shrimpCap) {
@@ -947,7 +1156,7 @@ class Shrimp extends Creature {
       const baby = new Shrimp(this.x + rand(-15, 15), this.y, this.gen + 1);
       pond.shrimp.push(baby);
       pond.maxGen = Math.max(pond.maxGen, baby.gen);
-      pond.log(`第 ${baby.gen} 代小虾在池底安家`);
+      pond.log('shrimpBorn', [baby.gen]);
     }
   }
   draw() {
@@ -989,7 +1198,7 @@ class Tadpole extends Creature {
     if (this.age > this.matureAge && pond.frogs.length < CONFIG.frogCap) {
       pond.frogs.push(new Frog(this.x, this.y, this.gen));
       this.dead = true;
-      pond.log('一只蝌蚪长成了青蛙，跳上了睡莲叶');
+      pond.log('tadpoleMature');
     }
   }
   draw() {
@@ -1054,7 +1263,7 @@ class Frog extends Creature {
         pond.tadpoles.push(new Tadpole(this.x + rand(-25, 25), this.y + rand(15, 40), this.gen + 1));
       }
       pond.maxGen = Math.max(pond.maxGen, this.gen + 1);
-      pond.log(`青蛙产下 ${n} 枚卵，第 ${this.gen + 1} 代蝌蚪孵化`);
+      pond.log('frogEggs', [n, this.gen + 1]);
     }
   }
   draw() {
@@ -1173,11 +1382,12 @@ const pond = {
   oxygen: 90,          // 氧气 0-100
   waterQuality: 80,    // 水质 0-100
   history: {},         // { 'YYYY-MM-DD': { total, tags:{tag:n} } }
-  settings: { mute: false, notify: true },
+  settings: { mute: false, notify: true, lang: 'en' }, // lang：界面语言（'en' 默认 | 'zh'）
   careReadyAt: 0,      // 照料按钮冷却时间戳
   pendingEco: 0,       // 已结算、待消化的生态秒（积压队列，封顶 ecoCatchupCap）
   bestStreak: 0,       // 历史最长连续天数（长期目标）
   time: 0,             // 视觉时钟
+  diary: [],           // 最近 10 条日记（存翻译键 + 参数，切换语言可整体重渲染）
   _warnAt: {},         // 濒危提示节流
   _uShrimp: false, _uTadpole: false, _uKoi: false, // 解锁标记
 
@@ -1197,9 +1407,9 @@ const pond = {
     const dq = 0.25 + this.shrimp.length * 0.05 - this.detritus.length * 0.08;
     this.waterQuality = clamp(this.waterQuality + dq * dtEco, 0, 100);
     // 濒危提示（每 60 生态秒最多一次/物种）
-    this.endangeredCheck('小鱼', this.fish.length);
-    if (this.unlockedShrimp()) this.endangeredCheck('虾', this.shrimp.length);
-    if (this.unlockedTadpole()) this.endangeredCheck('青蛙', this.frogs.length + this.tadpoles.length);
+    this.endangeredCheck('sp_fish', this.fish.length);
+    if (this.unlockedShrimp()) this.endangeredCheck('sp_shrimp', this.shrimp.length);
+    if (this.unlockedTadpole()) this.endangeredCheck('sp_frog', this.frogs.length + this.tadpoles.length);
   },
 
   // ---- 分帧消化积压的生态时间：每帧最多 300 步，避免大补算卡帧 ----
@@ -1209,12 +1419,12 @@ const pond = {
     this.pendingEco -= steps;
   },
 
-  endangeredCheck(name, count) {
+  endangeredCheck(key, count) { // key：物种翻译键（也用作提示节流的标识）
     if (count === 1) {
-      const last = this._warnAt[name] || -999;
+      const last = this._warnAt[key] || -999;
       if (this.ecoSeconds - last > 60) {
-        this._warnAt[name] = this.ecoSeconds;
-        this.log(`${name}只剩最后一只了，种群濒危！`, true);
+        this._warnAt[key] = this.ecoSeconds;
+        this.log('endangered', [t(key)], true);
       }
     }
   },
@@ -1223,20 +1433,20 @@ const pond = {
   repopulate() {
     if (this.fish.length === 0) {
       this.fish.push(new Fish(), new Fish());
-      this.log('一对小鱼循着专注的涟漪迁居而来');
+      this.log('fishReturn');
     }
     if (this.unlockedShrimp() && this.shrimp.length === 0) {
       this.shrimp.push(new Shrimp());
-      this.log('一只虾重新搬进了池底');
+      this.log('shrimpReturn');
     }
     if (this.unlockedTadpole() && this.tadpoles.length === 0 && this.frogs.length === 0) {
       this.tadpoles.push(new Tadpole(), new Tadpole());
-      this.log('水面又出现了一窝蛙卵');
+      this.log('eggsReturn');
     }
     // 锦鲤：已解锁但消失（寿终）→ 重新归来，镇塘之宝不会永久失去
     if (this.unlockedKoi() && this.koi.length === 0) {
       this.koi.push(new Koi());
-      this.log('锦鲤循着涟漪又回到了池塘');
+      this.log('koiReturn');
     }
   },
 
@@ -1244,7 +1454,7 @@ const pond = {
   care() {
     const now = Date.now();
     if (now < this.careReadyAt) {
-      toast(`池塘刚被照料过，${Math.ceil((this.careReadyAt - now) / 1000)} 秒后再来`);
+      toast(t('careCooldown', Math.ceil((this.careReadyAt - now) / 1000)));
       return;
     }
     this.careReadyAt = now + CONFIG.careCooldown * 1000;
@@ -1252,7 +1462,7 @@ const pond = {
     this.oxygen = clamp(this.oxygen + 10, 0, 100);
     this.detritus.splice(0, Math.ceil(this.detritus.length * 0.3));
     this.ripple(W() / 2, H() / 2, 30);
-    this.log('你打捞了残渣、注入新水，池塘清亮了一些');
+    this.log('careDone');
     this.save();
   },
 
@@ -1264,20 +1474,20 @@ const pond = {
     if (this.unlockedShrimp() && !this._uShrimp) {
       this._uShrimp = true;
       this.shrimp.push(new Shrimp(), new Shrimp());
-      this.log('坚持专注一小时，一对虾搬进了池底');
-      toast('解锁新物种：虾');
+      this.log('unlockShrimpLog');
+      toast(t('unlockShrimpToast'));
     }
     if (this.unlockedTadpole() && !this._uTadpole) {
       this._uTadpole = true;
       for (let i = 0; i < 3; i++) this.tadpoles.push(new Tadpole());
-      this.log('累计五小时专注，蝌蚪出现了');
-      toast('解锁新物种：蝌蚪与青蛙');
+      this.log('unlockTadLog');
+      toast(t('unlockTadToast'));
     }
     if (this.unlockedKoi() && !this._uKoi) {
       this._uKoi = true;
       this.koi.push(new Koi());
-      this.log('二十小时的沉淀，一条锦鲤悄然游来');
-      toast('解锁新物种：锦鲤');
+      this.log('unlockKoiLog');
+      toast(t('unlockKoiToast'));
     }
   },
 
@@ -1361,13 +1571,11 @@ const pond = {
 
   ripple(x, y, r) { this.ripples.push(new Ripple(x, y, r)); },
 
-  // ---- 池塘日记 ----
-  log(text, warn = false) {
-    const li = document.createElement('li');
-    li.textContent = text;
-    if (warn) li.className = 'warn';
-    els.diaryList.prepend(li);
-    while (els.diaryList.children.length > 10) els.diaryList.lastChild.remove();
+  // ---- 池塘日记：只存翻译键与参数，渲染时按当前语言生成，切换语言可整体重渲染 ----
+  log(k, p = [], warn = false) {
+    this.diary.unshift({ k, p: p.slice(), warn });
+    if (this.diary.length > 10) this.diary.length = 10;
+    renderDiary();
   },
 
   /* ---------- 绘制 ---------- */
@@ -1498,7 +1706,7 @@ const pond = {
     try {
       localStorage.setItem(CONFIG.saveKey, JSON.stringify(data));
     } catch (e) {
-      toast('存档写入失败（存储空间不足？），本次进度可能丢失');
+      toast(t('saveFail'));
     }
   },
 
@@ -1517,7 +1725,7 @@ const pond = {
     } catch (e) {
       // 存档损坏：保留"案发现场"后重建，不丢数据
       try { localStorage.setItem(CONFIG.backupKey + '.corrupt', raw); } catch (e2) {}
-      toast('检测到存档损坏，已自动备份并重建池塘');
+      toast(t('corruptToast'));
       return false;
     }
     this.applyData(data);
@@ -1540,7 +1748,9 @@ const pond = {
     this.history = (eco.history && typeof eco.history === 'object') ? eco.history : {};
     this.pendingEco = this._num(eco.pendingEco, 0, 0, CONFIG.ecoCatchupCap);
     this.bestStreak = this._num(eco.bestStreak, 0, 0);
-    this.settings = Object.assign({ mute: false, notify: true }, data.settings);
+    this.settings = Object.assign({ mute: false, notify: true, lang: 'en' }, data.settings);
+    if (!I18N[this.settings.lang]) this.settings.lang = 'en'; // 语言代码校验：不认识的一律回英文
+    LANG = this.settings.lang;
 
     const wSrc = (Array.isArray(data.weeds) ? data.weeds : []).slice(0, 20);
     this.weeds = wSrc.map((d, i) => {
@@ -1618,7 +1828,8 @@ const pond = {
     const p = data.pomo || {};
     pomo.cycle = this._num(p.cycle, 0, 0);
     pomo.task = typeof p.task === 'string' ? p.task : '';
-    pomo.tag = typeof p.tag === 'string' ? p.tag : '学习';
+    // 旧档的中文标签值 → 规范键名；未知的标签也归到 study 键（显示时按语言翻译）
+    pomo.tag = TAG_KEYS[p.tag] || (I18N.en['tag_' + p.tag] ? p.tag : 'study');
     els.taskInput.value = pomo.task;
     try { els.tagSelect.value = pomo.tag; } catch (e) {}
     if (p.state && p.state !== 'idle') {
@@ -1629,24 +1840,24 @@ const pond = {
         pomo.state = p.state; pomo.paused = true;
         pomo.totalMs = this._num(p.totalMs, 25 * 60000, 1000);
         pomo.remainMs = this._num(p.remainMs, pomo.totalMs, 0, pomo.totalMs);
-        this.log('上次的计时已暂停，随时可以继续');
+        this.log('pausedRestore');
       } else if (now < endAt) {
         // 未到点：无缝续跑
         pomo.state = p.state; pomo.paused = false;
         pomo.endAt = endAt;
         pomo.totalMs = this._num(p.totalMs, 25 * 60000, 1000);
-        this.log('欢迎回来，计时还在继续');
+        this.log('welcomeBack');
       } else {
         // 离开期间已到点：补记结果
         pomo.totalMs = this._num(p.totalMs, 25 * 60000, 1000);
         if (p.state === 'focus') {
           pomo.creditFocus(pomo.totalMs);
-          this.log('你离开时完成了一次专注，已为你记上');
+          this.log('creditWhileAway');
           pomo.state = 'idle';
           pomo.start(pomo.cycle % CONFIG.longBreakEvery === 0 ? 'longBreak' : 'break', true);
         } else {
           pomo.state = 'idle';
-          this.log('休息在你离开时已结束');
+          this.log('breakAway');
         }
       }
     }
@@ -1658,6 +1869,9 @@ const pond = {
     let old = null;
     try { old = JSON.parse(localStorage.getItem('eco-pond-v1')); } catch (e) {}
     if (!old || typeof old !== 'object') return false;
+    // v1 存档没有 settings：恢复默认设置（含语言），不沿用内存中的旧值
+    this.settings = { mute: false, notify: true, lang: 'en' };
+    LANG = this.settings.lang;
     this.ecoSeconds = this._num(old.ecoSeconds, 0, 0);
     // 旧版没记真实专注时长，按生态时间折算（近似值，解锁不吃亏）
     this.totalFocusSec = this._num(old.totalFocusSec, this.ecoSeconds, 0);
@@ -1687,7 +1901,7 @@ const pond = {
     if (this.unlockedShrimp()) this.shrimp.push(new Shrimp(), new Shrimp());
     if (this.unlockedTadpole()) for (let i = 0; i < 3; i++) this.tadpoles.push(new Tadpole());
     try { localStorage.removeItem('eco-pond-v1'); } catch (e) {}
-    this.log('旧池塘的档案已迁移到新版本');
+    this.log('v1Migrate');
     return true;
   },
 
@@ -1714,10 +1928,8 @@ const pond = {
     if (this._uShrimp) this.shrimp.push(new Shrimp(), new Shrimp());
     if (this._uTadpole) for (let i = 0; i < 3; i++) this.tadpoles.push(new Tadpole());
     if (this._uKoi) this.koi.push(new Koi());
-    this.log(this.totalFocusSec > 0
-      ? '池塘重生了，你的专注积累还在，老物种们悉数回归'
-      : '池塘重生了，一切从浮游生物和小鱼开始');
-    toast('生态已重置（重置前的池塘已备份，可恢复）');
+    this.log(this.totalFocusSec > 0 ? 'resetKept' : 'resetNew');
+    toast(t('resetToast'));
     syncUI();
     refreshBackupEntry();
     this.save();
@@ -1737,9 +1949,9 @@ const pond = {
       a.click();
       // 延迟回收：立刻 revoke 可能截断下载
       setTimeout(() => { a.remove(); URL.revokeObjectURL(url); }, 1000);
-      toast('存档已导出');
+      toast(t('exportToast'));
     } catch (e) {
-      toast('导出失败');
+      toast(t('exportFail'));
     }
   },
 
@@ -1770,13 +1982,13 @@ const pond = {
   },
 };
 
-// 段位阶梯：0h / 10h / 50h / 150h / 400h
+// 段位阶梯：0h / 10h / 50h / 150h / 400h（name 是翻译键）
 const RANKS = [
-  { sec: 0, name: '泉眼' },
-  { sec: 36000, name: '溪涧' },
-  { sec: 180000, name: '深潭' },
-  { sec: 540000, name: '湖泊' },
-  { sec: 1440000, name: '汪洋' },
+  { sec: 0, key: 'rank_0' },
+  { sec: 36000, key: 'rank_1' },
+  { sec: 180000, key: 'rank_2' },
+  { sec: 540000, key: 'rank_3' },
+  { sec: 1440000, key: 'rank_4' },
 ];
 
 // 初始播种：水草 + 浮游生物 + 几条鱼
@@ -1793,11 +2005,11 @@ function seed() {
  * 第四部分：UI（节流刷新 + 物种图鉴 + 体征面板）
  * ============================================================ */
 const SPECIES_META = [
-  { key: 'plankton', name: '浮游生物', glyph: '✳', unlockSec: 0, count: () => pond.plankton.length },
-  { key: 'fish', name: '小鱼', glyph: '🐟', unlockSec: 0, count: () => pond.fish.length, danger: () => pond.fish.length <= 1 },
-  { key: 'shrimp', name: '虾', glyph: '🦐', unlockSec: CONFIG.unlockShrimpFocus, count: () => pond.shrimp.length, danger: () => pond.shrimp.length <= 1 },
-  { key: 'frog', name: '青蛙', glyph: '🐸', unlockSec: CONFIG.unlockTadpoleFocus, count: () => pond.tadpoles.length + pond.frogs.length, danger: () => pond.tadpoles.length + pond.frogs.length <= 1 },
-  { key: 'koi', name: '锦鲤', glyph: '🎏', unlockSec: CONFIG.unlockKoiFocus, count: () => pond.koi.length },
+  { key: 'plankton', glyph: '✳', unlockSec: 0, count: () => pond.plankton.length },
+  { key: 'fish', glyph: '🐟', unlockSec: 0, count: () => pond.fish.length, danger: () => pond.fish.length <= 1 },
+  { key: 'shrimp', glyph: '🦐', unlockSec: CONFIG.unlockShrimpFocus, count: () => pond.shrimp.length, danger: () => pond.shrimp.length <= 1 },
+  { key: 'frog', glyph: '🐸', unlockSec: CONFIG.unlockTadpoleFocus, count: () => pond.tadpoles.length + pond.frogs.length, danger: () => pond.tadpoles.length + pond.frogs.length <= 1 },
+  { key: 'koi', glyph: '🎏', unlockSec: CONFIG.unlockKoiFocus, count: () => pond.koi.length },
 ];
 
 function renderSpecies() {
@@ -1807,16 +2019,28 @@ function renderSpecies() {
     const unlocked = pond.totalFocusSec >= sp.unlockSec;
     if (unlocked) {
       const n = sp.count();
-      li.innerHTML = `<span class="glyph">${sp.glyph}</span><span class="sname">${sp.name}</span><span class="scount">${n} 只</span>`;
+      li.innerHTML = `<span class="glyph">${sp.glyph}</span><span class="sname">${t('sp_' + sp.key)}</span><span class="scount">${t('speciesCount', n)}</span>`;
       if (sp.danger && sp.danger()) li.classList.add('endangered');
     } else {
       const need = sp.unlockSec - pond.totalFocusSec;
       li.classList.add('locked');
-      li.innerHTML = `<span class="glyph">${sp.glyph}</span><span class="sname">？？？</span><span class="scount">再专注 ${fmtDur(need)} 解锁</span>`;
+      li.innerHTML = `<span class="glyph">${sp.glyph}</span><span class="sname">${t('lockedName')}</span><span class="scount">${t('unlockHint', fmtDur(need))}</span>`;
     }
     frag.appendChild(li);
   }
   els.speciesList.replaceChildren(frag);
+}
+
+// 池塘日记渲染：把键 + 参数按当前语言生成文本（最新在前）
+function renderDiary() {
+  const frag = document.createDocumentFragment();
+  for (const e of pond.diary) {
+    const li = document.createElement('li');
+    li.textContent = t(e.k, ...e.p);
+    if (e.warn) li.className = 'warn';
+    frag.appendChild(li);
+  }
+  els.diaryList.replaceChildren(frag);
 }
 
 function renderVitals() {
@@ -1833,23 +2057,47 @@ function renderVitals() {
 // 状态变化时刷新按钮/文案
 function syncUI() {
   const st = pomo.state;
-  els.btnStart.textContent = st === 'idle' ? '开始专注' : st === 'focus' ? '专注中…' : '休息中…';
+  els.btnStart.textContent = st === 'idle' ? t('btnStart') : st === 'focus' ? t('btnFocusing') : t('btnResting');
   els.btnStart.disabled = st !== 'idle';
   els.btnPause.disabled = st === 'idle';
-  els.btnPause.textContent = pomo.paused ? '继续' : '暂停';
+  els.btnPause.textContent = pomo.paused ? t('btnResume') : t('btnPause');
   els.btnSkip.disabled = st === 'idle';
   els.badge.dataset.state = st;
-  els.badge.textContent = st === 'focus' ? '专 注 中' : st === 'break' ? '休 息 中' : st === 'longBreak' ? '长 休 息' : '待 机';
+  els.badge.textContent = st === 'focus' ? t('badgeFocus') : st === 'break' ? t('badgeBreak') : st === 'longBreak' ? t('badgeLong') : t('badgeIdle');
   els.display.dataset.state = st;
   els.fill.dataset.state = st;
   els.label.textContent = st === 'longBreak' ? 'LONG BREAK' : st === 'break' ? 'BREAK' : 'POMODORO';
   els.sub.textContent =
-    pomo.paused ? '已暂停，池塘时间凝固了' :
-    st === 'focus' ? (pomo.task ? `专注中 · ${pomo.tag} · ${pomo.task}` : `专注中 · ${pomo.tag} · 生态时间 ×1`) :
-    st === 'break' ? '生态时间慢速流动 ×0.25' :
-    st === 'longBreak' ? `每 ${CONFIG.longBreakEvery} 个番茄一次长休息` :
-    pond.ecoSeconds === 0 ? '按下「开始专注」，唤醒池塘' : '池塘睡着了，等待下一次专注';
-  document.title = st === 'idle' ? '生态番茄钟 · 池塘' : `${fmt(pomo.remain())} · 生态番茄钟`;
+    pomo.paused ? t('subPaused') :
+    st === 'focus' ? (pomo.task ? t('subFocusTask', tagName(pomo.tag), pomo.task) : t('subFocusNoTask', tagName(pomo.tag))) :
+    st === 'break' ? t('subBreak') :
+    st === 'longBreak' ? t('subLong', CONFIG.longBreakEvery) :
+    pond.ecoSeconds === 0 ? t('subIdleFirst') : t('subIdle');
+  document.title = st === 'idle' ? t('titleIdle') : `${fmt(pomo.remain())} · ${t('titleBase')}`;
+}
+
+/* ---------- 语言切换：静态文案批量刷新 + 动态区整体重渲染 ---------- */
+function applyLang() {
+  document.documentElement.lang = LANG === 'zh' ? 'zh-CN' : 'en';
+  // 静态文案：按 data-i18n 系列属性批量刷新
+  document.querySelectorAll('[data-i18n]').forEach(el => { el.textContent = t(el.dataset.i18n); });
+  document.querySelectorAll('[data-i18n-ph]').forEach(el => { el.placeholder = t(el.dataset.i18nPh); });
+  document.querySelectorAll('[data-i18n-aria]').forEach(el => { el.setAttribute('aria-label', t(el.dataset.i18nAria)); });
+  document.querySelectorAll('[data-i18n-title]').forEach(el => { el.setAttribute('title', t(el.dataset.i18nTitle)); });
+  // 时长下拉：选项文本 = 分钟数 + 单位
+  for (const sel of [els.selFocus, els.selBreak, els.selLong]) {
+    for (const o of sel.options) o.textContent = `${o.value} ${t('unitMin')}`;
+  }
+  // 标签下拉：显示名按语言翻译（值是稳定键名，不受语言影响）
+  for (const o of els.tagSelect.options) o.textContent = t('tag_' + o.value);
+  // 二次确认的按钮：只在未武装时恢复默认标签，避免覆盖倒计时提示
+  if (Date.now() >= resetArmed) els.btnReset.textContent = t('btnReset');
+  if (Date.now() >= restoreArmed) els.btnRestore.textContent = t('restore');
+  // 动态区：按钮/徽标/副标题、图鉴、日记、通知提示全部重渲染
+  syncUI();
+  renderSpecies();
+  renderDiary();
+  updateNotifyHint();
 }
 
 // 每帧刷新：计时文本按秒节流，统计按 250ms 节流，进度条按变化量节流
@@ -1860,12 +2108,12 @@ function tick(now) {
   if (sec !== _lastSec) {
     _lastSec = sec;
     els.display.textContent = fmt(remain);
-    document.title = pomo.state === 'idle' ? '生态番茄钟 · 池塘' : `${fmt(remain)} · 生态番茄钟`;
+    document.title = pomo.state === 'idle' ? t('titleIdle') : `${fmt(remain)} · ${t('titleBase')}`;
     // 屏幕阅读器：只在分钟数变化时播报，避免打扰
     const min = Math.ceil(remain / 60000);
     if (pomo.state !== 'idle' && min !== _lastSrMin) {
       _lastSrMin = min;
-      els.srTimer.textContent = `剩余约 ${min} 分钟`;
+      els.srTimer.textContent = t('srRemain', min);
     }
   }
   if (pomo.state !== 'idle') {
@@ -1886,14 +2134,14 @@ function tick(now) {
     els.statBest.textContent = pond.bestStreak;
     // 长期目标：段位进度
     const r = pond.rank();
-    els.rankName.textContent = r.cur.name;
+    els.rankName.textContent = t(r.cur.key);
     if (r.next) {
       const pct = (pond.totalFocusSec - r.cur.sec) / (r.next.sec - r.cur.sec) * 100;
       els.rankFill.style.width = pct.toFixed(1) + '%';
-      els.rankNext.textContent = `再专注 ${fmtDur(r.next.sec - pond.totalFocusSec)} 升至「${r.next.name}」`;
+      els.rankNext.textContent = t('rankNext', fmtDur(r.next.sec - pond.totalFocusSec), t(r.next.key));
     } else {
       els.rankFill.style.width = '100%';
-      els.rankNext.textContent = '最高段位';
+      els.rankNext.textContent = t('rankMax');
     }
     renderVitals();
     renderSpecies();
@@ -1925,16 +2173,16 @@ els.fileImport.onchange = () => {
       pond.applyData(data);
       els.chkMute.checked = pond.settings.mute;
       els.chkNotify.checked = pond.settings.notify;
-      updateNotifyHint();
-      syncUI();
+      els.selLang.value = pond.settings.lang; // 导入的存档可能带另一种语言
+      applyLang();
       pond.save();
-      toast('存档已导入');
-      pond.log('导入了一份池塘档案，水体焕然一新');
+      toast(t('importToast'));
+      pond.log('importLog');
     } catch (e) {
-      toast('导入失败：不是有效的池塘存档文件');
+      toast(t('importFail'));
     }
   };
-  reader.onerror = () => toast('导入失败：文件读取错误');
+  reader.onerror = () => toast(t('importReadFail'));
   reader.readAsText(f);
 };
 
@@ -1950,24 +2198,24 @@ els.btnRestore.onclick = () => {
   const now = Date.now();
   if (now < restoreArmed) {
     restoreArmed = 0;
-    els.btnRestore.textContent = '恢复备份';
+    els.btnRestore.textContent = t('restore');
     els.btnRestore.classList.remove('armed');
     try {
       const raw = localStorage.getItem(CONFIG.backupKey);
-      if (!raw) { toast('没有可用的备份'); return; }
+      if (!raw) { toast(t('noBackup')); return; }
       const cur = localStorage.getItem(CONFIG.saveKey);
       if (cur) localStorage.setItem(CONFIG.backupKey + '.preRestore', cur); // 反悔留底
       localStorage.setItem(CONFIG.saveKey, raw);
       location.reload(); // 最稳妥的恢复方式：整档重载
-    } catch (e) { toast('恢复失败'); }
+    } catch (e) { toast(t('restoreFail')); }
   } else {
     restoreArmed = now + 3000;
-    els.btnRestore.textContent = '再点一次确认恢复';
+    els.btnRestore.textContent = t('restoreArmed');
     els.btnRestore.classList.add('armed');
     setTimeout(() => {
       if (restoreArmed !== 0 && Date.now() >= restoreArmed) {
         restoreArmed = 0;
-        els.btnRestore.textContent = '恢复备份';
+        els.btnRestore.textContent = t('restore');
         els.btnRestore.classList.remove('armed');
       }
     }, 3100);
@@ -1980,17 +2228,17 @@ els.btnReset.onclick = () => {
   const now = Date.now();
   if (now < resetArmed) {
     resetArmed = 0;
-    els.btnReset.textContent = '重置生态';
+    els.btnReset.textContent = t('btnReset');
     els.btnReset.classList.remove('armed');
     pond.reset();
   } else {
     resetArmed = now + 3000;
-    els.btnReset.textContent = '再点一次确认重置';
+    els.btnReset.textContent = t('resetArmed');
     els.btnReset.classList.add('armed');
     setTimeout(() => {
       if (resetArmed !== 0 && Date.now() >= resetArmed) {
         resetArmed = 0;
-        els.btnReset.textContent = '重置生态';
+        els.btnReset.textContent = t('btnReset');
         els.btnReset.classList.remove('armed');
       }
     }, 3100);
@@ -2005,11 +2253,18 @@ els.chkNotify.onchange = () => {
   updateNotifyHint();
   pond.save();
 };
+// 语言切换：立即生效并持久化（写入 settings.lang，随存档/导出走）
+els.selLang.onchange = () => {
+  pond.settings.lang = els.selLang.value;
+  LANG = pond.settings.lang;
+  applyLang();
+  pond.save();
+};
 
 // 计时中修改时长：给出"下阶段生效"的反馈
 for (const sel of [els.selFocus, els.selBreak, els.selLong]) {
   sel.onchange = () => {
-    if (pomo.state !== 'idle') toast('新时长将在下一阶段生效');
+    if (pomo.state !== 'idle') toast(t('durChange'));
     else syncUI();
   };
 }
@@ -2096,16 +2351,16 @@ window.addEventListener('beforeunload', () => { settleEcoTime(); pond.save(); })
 /* ---------- 启动 ---------- */
 resize();
 if (pond.load()) {
-  if (pomo.state === 'idle') pond.log('欢迎回来，池塘还是你离开时的样子');
+  if (pomo.state === 'idle') pond.log('welcomeIdle');
 } else {
   seed();
-  pond.log('一方新池塘诞生了，撒下了浮游生物和几条小鱼');
+  pond.log('newPond');
 }
 els.chkMute.checked = pond.settings.mute;
 els.chkNotify.checked = pond.settings.notify;
+els.selLang.value = pond.settings.lang; // 存档里记住的语言（默认 en）
 refreshBackupEntry();
-updateNotifyHint();
-syncUI();
+applyLang();
 requestAnimationFrame(loop);
 </script>
 </body>
