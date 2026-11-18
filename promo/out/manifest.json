@@ -1,0 +1,64 @@
+{
+  "schema": 1,
+  "renderer": "make-project-promo/1.0.0 (Chrome fallback; Pillow/fontTools unavailable)",
+  "brief_sha256": "803e2d45eca0770c1c777603e2895a3408c3372c03e2d173fcb7c451064721f1",
+  "cards": 5,
+  "dimensions": [
+    1080,
+    1440
+  ],
+  "claims": [
+    {
+      "id": "c1",
+      "statement": "Completed focus sessions drive growth, breeding and species unlocks in a pond ecosystem.",
+      "source": "README.md#功能一览 and index.html (Creature subclasses, creditFocus, checkUnlocks)",
+      "status": "verified"
+    },
+    {
+      "id": "c2",
+      "statement": "The app is a single index.html with no build step and no dependencies; it can be opened offline.",
+      "source": "README.md#快速开始 / README.en.md#setup--run-locally",
+      "status": "verified"
+    },
+    {
+      "id": "c3",
+      "statement": "Saves are stored in localStorage, auto-saved every 8 seconds, and can be exported or imported as JSON.",
+      "source": "README.md#存档 and README.en.md#language-and-saves",
+      "status": "verified"
+    },
+    {
+      "id": "c4",
+      "statement": "A live browser demo is served at https://timyin7.github.io/Eco-Pomodoro/ and shows the 25:00 timer and pond.",
+      "source": "assets/demo-screenshot.png captured from the live Pages URL",
+      "status": "verified"
+    },
+    {
+      "id": "c5",
+      "statement": "Timing is based on Date.now() timestamps and eco time uses segmented settlement, with catch-up capped at 30 minutes.",
+      "source": "README.md#几个关键设计 and README.en.md#key-designs",
+      "status": "verified"
+    },
+    {
+      "id": "c6",
+      "statement": "Getting started takes three steps: open the app, choose a duration, press Start focus.",
+      "source": "README.md#快速开始--getting-started",
+      "status": "verified"
+    },
+    {
+      "id": "c7",
+      "statement": "System notifications require HTTPS or localhost and degrade to in-page toasts under file://.",
+      "source": "README.md#已知限制",
+      "status": "verified"
+    }
+  ],
+  "files": {
+    "01.png": "6e72699b6aeb7d7e1da9113dc03fb9a8767f500cabbccf972a7d65c47a4cec57",
+    "02.png": "0729fdeb58200f723cfdf6d07afe82d7d624ed501e6ccec75d07f69359bc035a",
+    "03.png": "8e6b2800c3776d341c8fc27cbcc22b668c9e8ab83dfe25e7f534b0cd7ef29302",
+    "04.png": "628a363ce547af94f6de30c656c7f0b74df39ebb63f0e2cbf77707bd72d0c6c8",
+    "05.png": "0621f67ae131ae643a54749f5ed083ff2122e8a7144ae8d8a40a88bfa23d6304",
+    "brief.json": "075e58258c2b4e34714ae4f0ddddac42baba54a058c6bdf59343d95d7141aaf5",
+    "cards.html": "2455495e01daf914b40d5f757aa62d6412eb774ab8f01d9604fd1bdd83916f56",
+    "post.md": "64d8d26bb2d8cee3310a65bad11d039d24b76c35b6f521102ca881f42acd1c39"
+  }
+}
